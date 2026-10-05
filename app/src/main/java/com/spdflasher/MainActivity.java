@@ -456,7 +456,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         hero.addView(hl, Ui.lp(this, dp(60), dp(60), 0, 0, 16, 0));
         LinearLayout ht = Ui.vbox(this);
         ht.addView(Ui.text(this, "SPD Flasher", 24, Ui.TEXT, true));
-        ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  " + (rootMode ? "Root" : "No Root"), 14, Ui.MUTED, false));
+        ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  Root / No Root", 14, Ui.MUTED, false));
         hero.addView(ht, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         deviceBox.addView(hero, Ui.fullLp(this, 8, 8));
 

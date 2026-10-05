@@ -11,8 +11,8 @@ android {
         applicationId 'com.spdflasher'
         minSdk 24
         targetSdk 34
-        versionCode 6
-        versionName "1.5"
+        versionCode 8
+        versionName "1.7"
 
         // 32-bit and 64-bit ARM phones (the source repo cares a lot about arm32)
         ndk {
@@ -40,6 +40,13 @@ android {
     packagingOptions {
         jniLibs {
             useLegacyPackaging true
+        }
+    }
+
+    // The built file is "Spd Flasher.apk" instead of app-debug.apk
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = 'Spd Flasher.apk'
         }
     }
 
