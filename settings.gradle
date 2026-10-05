@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "SpdFlasher"
+rootProject.name = "SPD-Tool"
 include ':app'

@@ -29,5 +29,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SpdFlasher-debug-apk
+          name: SPD-Tool-apk
           path: app/build/outputs/apk/debug/*.apk

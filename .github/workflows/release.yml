@@ -31,9 +31,9 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
-          cp "app/build/outputs/apk/debug/Spd Flasher.apk" "Spd-Flasher-${GITHUB_REF_NAME}.apk"
+          cp "app/build/outputs/apk/debug/SPD Tool.apk" "SPD-Tool-${GITHUB_REF_NAME}.apk"
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: Spd-Flasher-${{ github.ref_name }}.apk
+          files: SPD-Tool-${{ github.ref_name }}.apk

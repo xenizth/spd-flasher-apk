@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:extractNativeLibs="true"
-        android:label="SPD Flasher"
+        android:label="SPD Tool"
         android:theme="@android:style/Theme.Material.NoActionBar">
 
         <activity

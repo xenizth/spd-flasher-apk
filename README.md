@@ -1,4 +1,6 @@
-# SPD Flasher (Android app around spd_dump)
+# SPD Tool — by Xenizth
+
+Android app around spd_dump for Unisoc / Spreadtrum phones. Works with root (su) or without.
 
 Android app with buttons for the common Unisoc/Spreadtrum download-mode jobs:
 flash an `.img`, erase `persist`, disable/enable verity (+ verification), back up
@@ -15,15 +17,15 @@ libusb 1.0.27, compiled into the app. Android's `UsbManager` opens the phone
 1. Create a new GitHub repository and push this folder to it (the
    `.github/workflows/build-apk.yml` file must be included).
 2. Open the repo's **Actions** tab -> **Build APK** -> wait for the green check.
-3. Open the run, download the artifact **SpdFlasher-debug-apk**, unzip it and
-   install `app-debug.apk` (allow "install unknown apps").
+3. Open the run, download the artifact **SPD-Tool-apk**, unzip it and
+   install `SPD Tool.apk` (allow "install unknown apps").
 
 Two workflows are included (folder `.github/workflows/`, a hidden dot-folder):
 `build-apk.yml` builds on every push; `release.yml` publishes an APK to the
 Releases page when you push a tag such as `v1.0`.
 
 Or locally with Android SDK 34 + NDK 26.3.11579264 + CMake 3.22.1:
-`./gradlew assembleDebug` -> `app/build/outputs/apk/debug/app-debug.apk`.
+`./gradlew assembleDebug` -> `app/build/outputs/apk/debug/SPD Tool.apk`.
 
 ## Use
 
@@ -85,3 +87,9 @@ Spd_dump_termux repo.
 - New logo / launcher icon.
 - Bootloader unlock is not included.
 - Loaders folder: `/storage/emulated/0/SPD-FLASHER/FDLS/<chipset>/<brand>/` (fdl1.bin, fdl2.bin), e.g. `FDLS/ums9230/infinix`.
+
+
+## Credits
+- `spd_dump` by TomKing062 and contributors; Termux `--usb-fd` variant from Seuj09/Spd_dump_termux.
+- libusb 1.0.27 (LGPL-2.1).
+- App by Xenizth.

@@ -137,7 +137,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         runner = new SpdRunner(this, this);
         runner.setSharedDir(backupDir);
         setContentView(buildRoot());
-        append("SPD Flasher - wraps TomKing's spd_dump (libusb) for Unisoc/Spreadtrum phones.\n"
+        append("SPD Tool by Xenizth - wraps TomKing's spd_dump (libusb) for Unisoc/Spreadtrum phones.\n"
                 + "Backups: " + backupDir.getAbsolutePath() + "\nLoaders: " + fdlRoot.getAbsolutePath() + "\nInput: " + inputDir.getAbsolutePath() + "\n\n");
         renderAll();
         selectTab(TAB_DEVICE);
@@ -234,9 +234,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     private void askStorageAccess() {
-        new AlertDialog.Builder(this).setTitle("Backup folder access")
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Backup folder access")
                 .setMessage("Backups are saved to\n" + sharedBackupDir().getAbsolutePath()
-                        + "\n\nAndroid needs your OK for that: on the next screen allow 'All files access' for SPD Flasher. "
+                        + "\n\nAndroid needs your OK for that: on the next screen allow 'All files access' for SPD Tool. "
                         + "Without it, backups go to the app's private folder instead.")
                 .setNegativeButton("Not now", null)
                 .setPositiveButton("Allow", (d, w) -> requestStorageAccess()).show();
@@ -324,8 +324,10 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         ImageView logo = new ImageView(this);
         logo.setImageDrawable(new Logo());
         bar.addView(logo, Ui.lp(this, dp(34), dp(34), 0, 0, 10, 0));
-        TextView title = Ui.text(this, "SPD Flasher", 22, Ui.TEXT, true);
-        bar.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        LinearLayout titleBox = Ui.vbox(this);
+        titleBox.addView(Ui.text(this, "SPD Tool", 22, Ui.TEXT, true));
+        titleBox.addView(Ui.text(this, "by Xenizth", 12, Ui.ACCENT, false));
+        bar.addView(titleBox, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         bar.addView(barButton("🔄", v -> onRefresh()));
         bar.addView(barButton("⚙️", v -> showSettings()));
         LinearLayout.LayoutParams barLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -455,8 +457,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         hl.setImageDrawable(new Logo());
         hero.addView(hl, Ui.lp(this, dp(60), dp(60), 0, 0, 16, 0));
         LinearLayout ht = Ui.vbox(this);
-        ht.addView(Ui.text(this, "SPD Flasher", 24, Ui.TEXT, true));
-        ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  Root / No Root", 14, Ui.MUTED, false));
+        ht.addView(Ui.text(this, "SPD Tool", 24, Ui.TEXT, true));
+        ht.addView(Ui.text(this, "by Xenizth", 13, Ui.ACCENT, true));
+        ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  Root / No Root", 13, Ui.MUTED, false), Ui.fullLp(this, 2, 0));
         hero.addView(ht, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         deviceBox.addView(hero, Ui.fullLp(this, 8, 8));
 
@@ -586,7 +589,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                     rootMode = true;
                     prefs.edit().putBoolean("root", true).apply();
                 } else {
-                    toast("Root was not granted. Install Magisk / KernelSU and allow SPD Flasher, then try again.");
+                    toast("Root was not granted. Install Magisk / KernelSU and allow SPD Tool, then try again.");
                 }
                 renderDevice();
             });
@@ -737,7 +740,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }
         String[] names = new String[found.size()];
         for (int i = 0; i < names.length; i++) names[i] = found.get(i)[0] + " / " + found.get(i)[1];
-        new AlertDialog.Builder(this).setTitle("Choose profile").setItems(names,
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Choose profile").setItems(names,
                 (d, w) -> selectProfile(found.get(w)[0], found.get(w)[1])).show();
     }
 
@@ -898,7 +901,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         all.setText("Everything except userdata/cache (all_lite, large)");
         all.setTextColor(Ui.TEXT);
         LinearLayout box = dialogBox(names, all);
-        new AlertDialog.Builder(this).setTitle("Backup partitions")
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Backup partitions")
                 .setMessage("Partition names, separated by spaces. Files are saved as <name>.bin in Backup Files.")
                 .setView(box).setNegativeButton("Cancel", null)
                 .setPositiveButton("Back up", (d, w) -> {
@@ -935,7 +938,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         final String[] names = new String[files.length];
         final boolean[] on = new boolean[files.length];
         for (int i = 0; i < files.length; i++) names[i] = files[i].getName();
-        new AlertDialog.Builder(this).setTitle("Restore which backups?")
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Restore which backups?")
                 .setMultiChoiceItems(names, on, (d, which, checked) -> on[which] = checked)
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Next", (d, w) -> {
@@ -1018,7 +1021,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         typed.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
                 | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         LinearLayout box = dialogBox(bk, typed);
-        final AlertDialog dlg = new AlertDialog.Builder(this).setTitle("Erase persist partition")
+        final AlertDialog dlg = new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Erase persist partition")
                 .setMessage("persist usually holds sensor, camera, fingerprint and Wi-Fi/Bluetooth calibration and MAC data that cannot be "
                         + "regenerated. Features can stop working afterwards.")
                 .setView(box).setNegativeButton("Cancel", null)
@@ -1141,7 +1144,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         ex.setText("Add the reboot command when finished");
         ex.setTextColor(Ui.TEXT);
         ex.setChecked(true);
-        new AlertDialog.Builder(this).setTitle("Custom spd_dump commands")
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Custom spd_dump commands")
                 .setMessage("Runs after the loaders are sent. Quote arguments that contain spaces.")
                 .setView(dialogBox(args, ex)).setNegativeButton("Cancel", null)
                 .setPositiveButton("Run", (d, w) -> {
@@ -1506,7 +1509,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 + "Raise it if you need more time to get into download mode. Range 5 - 600.", 13, Ui.MUTED, false);
         TextView keepHelp = Ui.text(this, "Stops the screen from turning off during a flash or backup, which could interrupt it.", 13, Ui.MUTED, false);
         keepHelp.setPadding(dp(32), 0, 0, 0);
-        new AlertDialog.Builder(this).setTitle("Settings").setView(dialogBox(waitLabel, waitHelp, wait, keep, keepHelp))
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Settings").setView(dialogBox(waitLabel, waitHelp, wait, keep, keepHelp))
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Save", (d, w) -> {
                     int s = 60;
@@ -1516,20 +1519,43 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     private void showAbout() {
+        LinearLayout box = Ui.vbox(this);
+        box.setGravity(Gravity.CENTER_HORIZONTAL);
+        box.setPadding(dp(24), dp(24), dp(24), dp(8));
         ImageView logo = new ImageView(this);
         logo.setImageDrawable(new Logo());
-        LinearLayout lbox = dialogBox(logo);
-        logo.setLayoutParams(Ui.lp(this, dp(72), dp(72), 0, 4, 0, 4));
-        new AlertDialog.Builder(this).setTitle("SPD Flasher").setView(lbox)
-                .setMessage("Front end for TomKing's spd_dump (bundled with libusb) for Unisoc/Spreadtrum phones.\n\n"
-                        + "A wrong loader or partition can permanently brick a phone. Back up persist and the NV partitions "
-                        + "first, and keep this screen open while a session runs.\n\n"
-                        + "Backups: " + backupDir.getAbsolutePath())
-                .setPositiveButton("OK", null).show();
+        box.addView(logo, Ui.lp(this, dp(84), dp(84), 0, 0, 0, 12));
+        TextView name = Ui.text(this, "SPD Tool", 26, Ui.TEXT, true);
+        name.setGravity(Gravity.CENTER);
+        box.addView(name);
+        TextView by = Ui.text(this, "by Xenizth  ·  v" + versionName(), 14, Ui.ACCENT, true);
+        by.setGravity(Gravity.CENTER);
+        box.addView(by, Ui.fullLp(this, 2, 12));
+        TextView what = Ui.text(this, "A phone-side front end for TomKing's spd_dump (with libusb) for Unisoc / Spreadtrum devices. "
+                + "Works with or without root.", 14, Ui.MUTED, false);
+        what.setGravity(Gravity.CENTER);
+        what.setLineSpacing(0, 1.15f);
+        box.addView(what, Ui.fullLp(this, 0, 14));
+        box.addView(Ui.banner(this, "⚠️", "A wrong loader or partition can permanently brick a phone. Back up persist and the NV "
+                + "partitions first, and keep this screen open while a session runs.", Ui.AMBER_BG, Ui.AMBER), Ui.fullLp(this, 0, 12));
+        TextView paths = Ui.mono(this, "Backups  " + backupDir.getAbsolutePath() + "\nInput    " + inputDir.getAbsolutePath()
+                + "\nLoaders  " + fdlRoot.getAbsolutePath(), 11, Ui.MUTED);
+        box.addView(paths, Ui.fullLp(this, 0, 8));
+        ScrollView sv = new ScrollView(this);
+        sv.addView(box);
+        new AlertDialog.Builder(this, R.style.SpdDialog).setView(sv).setPositiveButton("Close", null).show();
+    }
+
+    private String versionName() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return "";
+        }
     }
 
     private void confirm(String title, String msg, String yes, final Runnable ok) {
-        new AlertDialog.Builder(this).setTitle(title).setMessage(msg).setNegativeButton("Cancel", null)
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle(title).setMessage(msg).setNegativeButton("Cancel", null)
                 .setPositiveButton(yes, (d, w) -> ok.run()).show();
     }
 
@@ -1537,7 +1563,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         final EditText input = dialogField("Type " + word + " to confirm", "");
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
                 | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-        final AlertDialog dlg = new AlertDialog.Builder(this).setTitle(title).setMessage(msg).setView(dialogBox(input))
+        final AlertDialog dlg = new AlertDialog.Builder(this, R.style.SpdDialog).setTitle(title).setMessage(msg).setView(dialogBox(input))
                 .setNegativeButton("Cancel", null).setPositiveButton("Proceed", (d, w) -> ok.run()).create();
         dlg.show();
         gateOnWord(dlg, input, word);

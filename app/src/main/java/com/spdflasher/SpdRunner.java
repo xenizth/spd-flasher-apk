@@ -328,7 +328,7 @@ final class SpdRunner {
         reader.join(4000);
         ui.log("\n[root session exited with code " + code + "]\n");
         if (code == 1 && rootPids.isEmpty())
-            ui.log("Nothing ran. Open your root manager (Magisk / KernelSU) and allow root for SPD Flasher, then retry.\n");
+            ui.log("Nothing ran. Open your root manager (Magisk / KernelSU) and allow root for SPD Tool, then retry.\n");
         ui.status(code == 0 ? "Finished" : "Failed (exit " + code + ")");
         return code;
     }
