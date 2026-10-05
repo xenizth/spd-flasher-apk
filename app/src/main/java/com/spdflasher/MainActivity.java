@@ -1501,7 +1501,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         keep.setText("Keep the screen on while a session runs");
         keep.setTextColor(Ui.TEXT);
         keep.setChecked(prefs.getBoolean("keepOn", true));
-        new AlertDialog.Builder(this).setTitle("Settings").setView(dialogBox(wait, keep))
+        TextView waitLabel = Ui.text(this, "Device wait time (seconds)", 15, Ui.TEXT, true);
+        TextView waitHelp = Ui.text(this, "How long the app waits for the phone to appear on USB after you tap an operation. "
+                + "Raise it if you need more time to get into download mode. Range 5 - 600.", 13, Ui.MUTED, false);
+        TextView keepHelp = Ui.text(this, "Stops the screen from turning off during a flash or backup, which could interrupt it.", 13, Ui.MUTED, false);
+        keepHelp.setPadding(dp(32), 0, 0, 0);
+        new AlertDialog.Builder(this).setTitle("Settings").setView(dialogBox(waitLabel, waitHelp, wait, keep, keepHelp))
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Save", (d, w) -> {
                     int s = 60;
