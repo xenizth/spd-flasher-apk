@@ -27,11 +27,24 @@ jobs:
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-34" "build-tools;34.0.0" "ndk;26.3.11579264" "cmake;3.22.1"
 
-      - name: Build debug-signed APK
+      - name: Build APK (release-signed when the keystore secrets exist)
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug
-          cp "app/build/outputs/apk/debug/SPD Tool.apk" "SPD-Tool-${GITHUB_REF_NAME}.apk"
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
+            ./gradlew --no-daemon assembleRelease
+            cp "app/build/outputs/apk/release/SPD Tool.apk" "SPD-Tool-${GITHUB_REF_NAME}.apk"
+          else
+            echo "No keystore secrets found - building the debug-signed APK instead"
+            ./gradlew --no-daemon assembleDebug
+            cp "app/build/outputs/apk/debug/SPD Tool.apk" "SPD-Tool-${GITHUB_REF_NAME}.apk"
+          fi
 
       - name: Publish release
         uses: softprops/action-gh-release@v2

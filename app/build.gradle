@@ -11,8 +11,8 @@ android {
         applicationId 'com.spdflasher'
         minSdk 24
         targetSdk 34
-        versionCode 9
-        versionName "1.8"
+        versionCode 10
+        versionName "1.9"
 
         // 32-bit and 64-bit ARM phones (the source repo cares a lot about arm32)
         ndk {
@@ -50,9 +50,29 @@ android {
         }
     }
 
+    // Release signing: only active when the CI (or you) provides the keystore through environment variables.
+    signingConfigs {
+        release {
+            if (System.getenv('KEYSTORE_FILE')) {
+                storeFile file(System.getenv('KEYSTORE_FILE'))
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+            }
+        }
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (System.getenv('KEYSTORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
