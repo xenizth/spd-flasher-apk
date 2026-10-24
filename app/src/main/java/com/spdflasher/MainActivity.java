@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -98,6 +99,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private final TextView[] navLabels = new TextView[4];
     private LinearLayout deviceBox, opsBox, filesBox;
     private TextView statusLine, logView;
+    private android.widget.ProgressBar progress;
     private ScrollView logScroll;
     private EditText stdinInput;
 
@@ -117,10 +119,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
-        getWindow().setStatusBarColor(Ui.BG);
-        getWindow().setNavigationBarColor(Ui.BG);
+        
         workDir = new File(getFilesDir(), "work");
         prefs = getSharedPreferences("spdflasher", MODE_PRIVATE);
+        Ui.applyTheme(prefs.getInt("theme", 0));
+        getWindow().setStatusBarColor(Ui.BG);
+        getWindow().setNavigationBarColor(Ui.BG);
         rootMode = prefs.getBoolean("root", false);
         backupDir = resolveBackupDir();
         fdlRoot = resolveFdlRoot();
@@ -315,7 +319,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private View buildRoot() {
         LinearLayout root = Ui.vbox(this);
-        root.setBackgroundColor(Ui.BG);
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{Ui.BG, Ui.BG_MID, Ui.BG});
+        root.setBackground(bg);
 
         // top bar
         LinearLayout bar = new Ui.CappedRow(this);
@@ -334,6 +340,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         barLp.gravity = Gravity.CENTER_HORIZONTAL;
         root.addView(bar, barLp);
 
+        progress = new android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progress.setIndeterminate(true);
+        progress.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(Ui.ACCENT));
+        progress.setVisibility(View.GONE);
+        root.addView(progress, Ui.lp(this, ViewGroup.LayoutParams.MATCH_PARENT, dp(3), 16, 0, 16, 4));
+
         statusLine = Ui.text(this, "", 13, Ui.ACCENT, true);
         statusLine.setPadding(dp(20), 0, dp(20), dp(4));
         statusLine.setVisibility(View.GONE);
@@ -351,7 +363,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         // bottom navigation: floating rounded bar, selected tab gets a glowing pill
         LinearLayout nav = new Ui.CappedRow(this);
-        nav.setBackground(Ui.panel(this, 0xFF2C3140, 0xFF1D2028, 30));
+        nav.setBackground(Ui.panel(this, Ui.CARD, Ui.CARD_DARK, 30));
         nav.setPadding(dp(6), dp(8), dp(6), dp(8));
         nav.setElevation(dp(10));
         String[] glyphs = {"📱", "🧰", "📁", "🖥️"};
@@ -411,14 +423,33 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         for (int i = 0; i < 4; i++) {
             tabViews[i].setVisibility(i == tab ? View.VISIBLE : View.GONE);
             boolean sel = i == tab;
-            navPills[i].setBackground(sel ? Ui.panel(this, 0xFF4C5E94, 0xFF33406A, 17) : null);
+            navPills[i].setBackground(sel ? Ui.panel(this, Ui.CHIP_TOP, Ui.CHIP_BOT, 17) : null);
             navPills[i].setAlpha(sel ? 1f : 0.6f);
             navLabels[i].setTextColor(sel ? Ui.ACCENT : Ui.MUTED);
             navLabels[i].setTypeface(sel ? android.graphics.Typeface.DEFAULT_BOLD : android.graphics.Typeface.DEFAULT);
         }
+        animateTiles = animOn();
         if (tab == TAB_DEVICE) renderDevice();
         else if (tab == TAB_OPS) renderOps();
         else if (tab == TAB_FILES) renderFiles();
+        animateTiles = false;
+        if (animOn()) {
+            View v = tabViews[tab];
+            v.setAlpha(0f);
+            v.setTranslationY(dp(12));
+            v.animate().alpha(1f).translationY(0f).setDuration(220).start();
+        }
+        haptic(navPills[tab]);
+    }
+
+    private boolean animateTiles;
+    private int tileIndex;
+    private android.animation.ObjectAnimator pulse;
+
+    private boolean animOn() { return prefs != null && prefs.getBoolean("anim", true); }
+
+    private void haptic(View v) {
+        if (prefs != null && prefs.getBoolean("haptic", true)) v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
     }
 
     private void renderAll() {
@@ -451,7 +482,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         // hero
         LinearLayout hero = Ui.hbox(this);
         hero.setGravity(Gravity.CENTER_VERTICAL);
-        hero.setBackground(Ui.panel(this, 0xFF35508F, 0xFF161A24, 28));
+        hero.setBackground(Ui.panel(this, Ui.HERO, Ui.mix(Ui.BG, 0xFF000000, 0.3f), 30));
         hero.setPadding(dp(18), dp(18), dp(18), dp(18));
         ImageView hl = new ImageView(this);
         hl.setImageDrawable(new Logo());
@@ -460,6 +491,21 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         ht.addView(Ui.text(this, "SPD Tool", 24, Ui.TEXT, true));
         ht.addView(Ui.text(this, "by Xenizth", 13, Ui.ACCENT, true));
         ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  Root / No Root", 13, Ui.MUTED, false), Ui.fullLp(this, 2, 0));
+        LinearLayout pills = Ui.hbox(this);
+        boolean linked = !unisocDevices().isEmpty();
+        TextView linkBadge = Ui.badge(this, linked ? "●  CONNECTED" : "●  NO DEVICE", linked ? Ui.GREEN : Ui.RED_TEXT,
+                linked ? Ui.GREEN_BG : Ui.RED_BG);
+        pills.addView(linkBadge, Ui.wrapLp(this, 0, 0, 8, 0));
+        if (pulse != null) pulse.cancel();
+        if (linked && animOn()) {
+            pulse = android.animation.ObjectAnimator.ofFloat(linkBadge, "alpha", 1f, 0.45f);
+            pulse.setDuration(900);
+            pulse.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            pulse.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+            pulse.start();
+        }
+        pills.addView(Ui.badge(this, rootMode ? "ROOT" : "NO ROOT", Ui.ACCENT, 0x55000000));
+        ht.addView(pills, Ui.fullLp(this, 10, 0));
         hero.addView(ht, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         deviceBox.addView(hero, Ui.fullLp(this, 8, 8));
 
@@ -759,7 +805,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private void renderOps() {
         if (opsBox == null) return;
         opsBox.removeAllViews();
-        opsBox.addView(Ui.text(this, "Spreadtrum Flash Operations", 22, Ui.ACCENT, true), Ui.fullLp(this, 8, 0));
+        opsBox.addView(Ui.text(this, "Operations", 26, Ui.TEXT, true), Ui.fullLp(this, 8, 0));
         opsBox.addView(Ui.text(this, "Tap an operation to run it. Plug the phone in after you tap.", 15, Ui.MUTED, false),
                 Ui.fullLp(this, 4, 12));
 
@@ -789,35 +835,45 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         opsBox.addView(opts, Ui.fullLp(this, 0, 12));
 
         Tile[] tiles = {
-                new Tile("🚀", "FLASH", 1, "Flash Partitions", "Write every image in Input Files to its partition", this::opFlash),
+                new Tile("🚀", "FLASH", 0, "Flash Partitions", "Write every image in Input Files to its partition", this::opFlash),
                 new Tile("📋", "INFO", 0, "Partition Table", "Connect and list the phone's partitions (read-only)", this::opTable),
                 new Tile("📦", "BACKUP", 0, "Backup Partitions", "Dump chosen partitions to Backup Files", this::opBackup),
                 new Tile("📶", "IMEI", 0, "Backup IMEI & NV", "Dump miscdata, prodnv and the modem NV partitions", this::opBackupNv),
                 new Tile("🔄", "RESTORE", 0, "Restore Backup", "Write backed-up .bin files back to the phone", this::opRestore),
-                new Tile("🗑️", "WIPE", 2, "Wipe Userdata", "Factory reset through recovery on the next boot", this::opWipe),
-                new Tile("🅰️", "SLOT A", 0, "Slot A (SPD)", "Switch the active boot slot to A", () -> opSlot("a")),
-                new Tile("🅱️", "SLOT B", 0, "Slot B (SPD)", "Switch the active boot slot to B", () -> opSlot("b")),
-                new Tile("🔓", "AVB 0", 0, "Disable Verity", "verity 0: turn off dm-verity in vbmeta", this::opVerity),
-                new Tile("🛡️", "AVB 3", 0, "Disable Verification", "Turn off verity and verification in vbmeta", this::opVerityAll),
-                new Tile("🔒", "AVB 1", 0, "Enable Verity", "verity 1: turn dm-verity back on", this::opVerityOn),
-                new Tile("🧹", "ERASE", 3, "Erase Persist", "Wipe the persist partition (backup offered)", this::opErasePersist),
-                new Tile("🛠️", "RECOVERY", 0, "Reboot Recovery", "Reboot the device into recovery", () -> opReboot(1)),
-                new Tile("⚡", "FASTBOOT", 0, "Reboot Fastboot", "Reboot the device into fastbootd", () -> opReboot(2)),
-                new Tile("📴", "POWER", 0, "Power Off Device", "Shut the device down", () -> opReboot(3)),
-                new Tile("🧩", "REPART", 3, "Repartition", "Apply a partition-list XML you choose (erases all data)", this::opRepartition),
-                new Tile("💻", "CLI", 0, "Custom spd_dump", "Type your own spd_dump commands", this::opCustom),
+                new Tile("🗑️", "WIPE", 0, "Wipe Userdata", "Factory reset through recovery on the next boot", this::opWipe),
+                new Tile("🅰️", "SLOT A", 1, "Slot A (SPD)", "Switch the active boot slot to A", () -> opSlot("a")),
+                new Tile("🅱️", "SLOT B", 1, "Slot B (SPD)", "Switch the active boot slot to B", () -> opSlot("b")),
+                new Tile("🔓", "AVB 0", 1, "Disable Verity", "verity 0: turn off dm-verity in vbmeta", this::opVerity),
+                new Tile("🛡️", "AVB 3", 1, "Disable Verification", "Turn off verity and verification in vbmeta", this::opVerityAll),
+                new Tile("🔒", "AVB 1", 1, "Enable Verity", "verity 1: turn dm-verity back on", this::opVerityOn),
+                new Tile("🧹", "ERASE", 2, "Erase Persist", "Wipe the persist partition (backup offered)", this::opErasePersist),
+                new Tile("🧩", "REPART", 2, "Repartition", "Apply a partition-list XML you choose (erases all data)", this::opRepartition),
+                new Tile("🛠️", "RECOVERY", 3, "Reboot Recovery", "Reboot the device into recovery", () -> opReboot(1)),
+                new Tile("⚡", "FASTBOOT", 3, "Reboot Fastboot", "Reboot the device into fastbootd", () -> opReboot(2)),
+                new Tile("📴", "POWER", 3, "Power Off Device", "Shut the device down", () -> opReboot(3)),
+                new Tile("💻", "CLI", 4, "Custom spd_dump", "Type your own spd_dump commands", this::opCustom),
         };
+        tileIndex = 0;
+        String[] secNames = {"Flash & data", "Boot & security", "Danger zone", "Device control", "Advanced"};
         int cols = Ui.tileColumns(this);
-        for (int i = 0; i < tiles.length; i += cols) {
-            LinearLayout row = Ui.hbox(this);
-            row.setBaselineAligned(false);
-            for (int k = 0; k < cols; k++) {
-                View v = i + k < tiles.length ? tileView(tiles[i + k]) : new View(this);
-                row.addView(v, tileLp(k == 0, k == cols - 1));
+        for (int s = 0; s < secNames.length; s++) {
+            List<Tile> inSec = new ArrayList<>();
+            for (Tile t : tiles) if (t.kind == s) inSec.add(t);
+            if (inSec.isEmpty()) continue;
+            opsBox.addView(Ui.section(this, secNames[s], SECTION_COLORS[s]), Ui.fullLp(this, 14, 8));
+            for (int a = 0; a < inSec.size(); a += cols) {
+                LinearLayout row = Ui.hbox(this);
+                row.setBaselineAligned(false);
+                for (int k = 0; k < cols; k++) {
+                    View v = a + k < inSec.size() ? tileView(inSec.get(a + k)) : new View(this);
+                    row.addView(v, tileLp(k == 0, k == cols - 1));
+                }
+                opsBox.addView(row, Ui.fullLp(this, 0, 8));
             }
-            opsBox.addView(row, Ui.fullLp(this, 0, 8));
         }
     }
+
+    private static final int[] SECTION_COLORS = {0xFF8AB4FF, 0xFFC5A3FF, 0xFFFF8A80, 0xFF6FE0C5, 0xFFFFC857};
 
     private static final class Tile {
         final String glyph, tag, title, desc;
@@ -837,17 +893,29 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     private View tileView(final Tile t) {
+        final int accent = SECTION_COLORS[t.kind];
         LinearLayout l = Ui.vbox(this);
-        l.setBackground(Ui.ripple(Ui.panel(this, 0xFF343A49, 0xFF23262E, 26)));
+        l.setBackground(Ui.ripple(Ui.tinted(this, accent, 26)));
         l.setPadding(dp(16), dp(16), dp(16), dp(16));
         l.setClickable(true);
-        l.setOnClickListener(v -> { if (ready()) t.action.run(); });
+        l.setOnClickListener(v -> { haptic(v); if (ready()) t.action.run(); });
+        l.setOnTouchListener((v, ev) -> {
+            if (!animOn()) return false;
+            int a = ev.getActionMasked();
+            if (a == android.view.MotionEvent.ACTION_DOWN) v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(90).start();
+            else if (a == android.view.MotionEvent.ACTION_UP || a == android.view.MotionEvent.ACTION_CANCEL)
+                v.animate().scaleX(1f).scaleY(1f).setDuration(140).start();
+            return false;
+        });
+        if (animateTiles) {
+            l.setAlpha(0f);
+            l.setTranslationY(dp(18));
+            l.animate().alpha(1f).translationY(0f).setStartDelay(Math.min(tileIndex++, 14) * 28L).setDuration(260).start();
+        }
         LinearLayout top = Ui.hbox(this);
-        top.addView(Ui.iconBox(this, t.glyph, Ui.ICON_BG, Ui.ACCENT, 46));
+        top.addView(Ui.iconBox(this, t.glyph, Ui.mix(0xFF1B1D24, accent, 0.24f), accent, 46));
         top.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
-        int fg = t.kind == 1 ? Ui.GREEN : t.kind == 2 ? Ui.AMBER : t.kind == 3 ? Ui.RED_TEXT : Ui.ACCENT;
-        int bg = t.kind == 1 ? Ui.GREEN_BG : t.kind == 2 ? Ui.AMBER_BG : t.kind == 3 ? Ui.RED_BG : Ui.ICON_BG;
-        top.addView(Ui.badge(this, t.tag, fg, bg));
+        top.addView(Ui.badge(this, t.tag, accent, Ui.mix(0xFF1B1D24, accent, 0.16f)));
         l.addView(top);
         l.addView(Ui.ellipsized(Ui.text(this, t.title, 17, Ui.TEXT, true), 1), Ui.fullLp(this, 12, 0));
         l.addView(Ui.ellipsized(Ui.mono(this, t.desc, 12, Ui.MUTED), 3), Ui.fullLp(this, 4, 0));
@@ -1193,6 +1261,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private void setBusy(boolean b) {
         busy = b;
+        if (progress != null) progress.setVisibility(b ? View.VISIBLE : View.GONE);
         if (b && prefs.getBoolean("keepOn", true)) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (!b && statusText.startsWith("Waiting")) status("");
@@ -1457,7 +1526,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         box.addView(bar, Ui.fullLp(this, 0, 8));
 
         logScroll = new ScrollView(this);
-        logScroll.setBackground(Ui.round(this, 0xFF0F1115, 20));
+        logScroll.setBackground(Ui.panel(this, 0xFF0A0C11, 0xFF10131A, 22));
         logView = Ui.mono(this, "", 11.5f, 0xFFC9D1D9);
         logView.setPadding(dp(12), dp(10), dp(12), dp(10));
         logView.setTextIsSelectable(true);
@@ -1504,17 +1573,46 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         keep.setText("Keep the screen on while a session runs");
         keep.setTextColor(Ui.TEXT);
         keep.setChecked(prefs.getBoolean("keepOn", true));
+        final CheckBox anim = new CheckBox(this);
+        anim.setText("Animations");
+        anim.setTextColor(Ui.TEXT);
+        anim.setChecked(prefs.getBoolean("anim", true));
+        final CheckBox hap = new CheckBox(this);
+        hap.setText("Haptic feedback on taps");
+        hap.setTextColor(Ui.TEXT);
+        hap.setChecked(prefs.getBoolean("haptic", true));
+        TextView themeLabel = Ui.text(this, "Theme", 15, Ui.TEXT, true);
+        final int[] pick = {prefs.getInt("theme", 0)};
+        final HorizontalScrollView themes = Ui.chipRow(this);
+        for (int i = 0; i < Ui.THEME_NAMES.length; i++) {
+            final int idx = i;
+            Ui.addChip(themes, Ui.chip(this, Ui.THEME_NAMES[i], i == pick[0], v -> {
+                pick[0] = idx;
+                for (int k = 0; k < Ui.THEME_NAMES.length; k++) {
+                    View c = ((LinearLayout) themes.getChildAt(0)).getChildAt(k);
+                    c.setAlpha(k == idx ? 1f : 0.55f);
+                }
+            }));
+        }
+        for (int k = 0; k < Ui.THEME_NAMES.length; k++)
+            ((LinearLayout) themes.getChildAt(0)).getChildAt(k).setAlpha(k == pick[0] ? 1f : 0.55f);
         TextView waitLabel = Ui.text(this, "Device wait time (seconds)", 15, Ui.TEXT, true);
         TextView waitHelp = Ui.text(this, "How long the app waits for the phone to appear on USB after you tap an operation. "
                 + "Raise it if you need more time to get into download mode. Range 5 - 600.", 13, Ui.MUTED, false);
         TextView keepHelp = Ui.text(this, "Stops the screen from turning off during a flash or backup, which could interrupt it.", 13, Ui.MUTED, false);
         keepHelp.setPadding(dp(32), 0, 0, 0);
-        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Settings").setView(dialogBox(waitLabel, waitHelp, wait, keep, keepHelp))
+        ScrollView sv = new ScrollView(this);
+        sv.addView(dialogBox(themeLabel, themes, waitLabel, waitHelp, wait, keep, keepHelp, anim, hap));
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Settings").setView(sv)
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Save", (d, w) -> {
                     int s = 60;
                     try { s = Integer.parseInt(wait.getText().toString().trim()); } catch (NumberFormatException ignored) { }
-                    prefs.edit().putInt("wait", Math.max(5, Math.min(600, s))).putBoolean("keepOn", keep.isChecked()).apply();
+                    int oldTheme = prefs.getInt("theme", 0);
+                    prefs.edit().putInt("wait", Math.max(5, Math.min(600, s))).putBoolean("keepOn", keep.isChecked())
+                            .putBoolean("anim", anim.isChecked()).putBoolean("haptic", hap.isChecked())
+                            .putInt("theme", pick[0]).apply();
+                    if (pick[0] != oldTheme) recreate();
                 }).show();
     }
 
@@ -1615,6 +1713,30 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     /** UI thread only. Handles '\r' progress lines by overwriting the current line. */
+    /** Colours console lines: errors red, warnings/reconnects amber, success green, commands blue. */
+    private CharSequence colorize(CharSequence text) {
+        if (text.length() > 60_000) return text;
+        android.text.SpannableStringBuilder sb = new android.text.SpannableStringBuilder(text);
+        String s = text.toString();
+        int start = 0;
+        while (start < s.length()) {
+            int end = s.indexOf('\n', start);
+            if (end < 0) end = s.length();
+            String line = s.substring(start, end).toLowerCase(Locale.US);
+            int color = 0;
+            if (line.contains("error") || line.contains("fail") || line.contains("cannot") || line.contains("denied")
+                    || line.contains("not granted") || line.contains("did not come back")) color = 0xFFFF8A80;
+            else if (line.contains("[reconnect]") || line.contains("warn") || line.contains("waiting")) color = 0xFFFFC857;
+            else if (line.contains("done") || line.contains("success") || line.contains("finished")
+                    || line.contains("exited with code 0]") || line.contains("reopened")) color = 0xFF6FE0A0;
+            else if (line.startsWith("$ ") || line.startsWith("> ")) color = 0xFF8AB4FF;
+            if (color != 0 && end > start)
+                sb.setSpan(new android.text.style.ForegroundColorSpan(color), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            start = end + 1;
+        }
+        return sb;
+    }
+
     private void append(String s) {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
@@ -1633,7 +1755,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             flushScheduled = true;
             main.postDelayed(() -> {
                 flushScheduled = false;
-                logView.setText(logBuf);
+                logView.setText(colorize(logBuf));
                 logScroll.post(() -> logScroll.fullScroll(View.FOCUS_DOWN));
             }, 120);
         }
