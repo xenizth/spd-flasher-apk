@@ -19,16 +19,16 @@ import android.widget.TextView;
 final class Ui {
     private Ui() {}
 
-    static final int BG = 0xFF1B1D24;
-    static final int CARD = 0xFF2C303B;
-    static final int CARD_DARK = 0xFF23262E;
-    static final int CHIP_SEL = 0xFF3E4559;
+    static int BG = 0xFF1B1D24;
+    static int CARD = 0xFF2C303B;
+    static int CARD_DARK = 0xFF23262E;
+    static int CHIP_SEL = 0xFF3E4559;
     static final int OUTLINE = 0xFF8E919A;
     static final int TEXT = 0xFFE3E2E9;
     static final int MUTED = 0xFFC4C6D0;
-    static final int ACCENT = 0xFFAAC4FF;
-    static final int ON_ACCENT = 0xFF0E2659;
-    static final int BLUE_BANNER = 0xFF2A3A5E;
+    static int ACCENT = 0xFFAAC4FF;
+    static int ON_ACCENT = 0xFF0E2659;
+    static int BLUE_BANNER = 0xFF2A3A5E;
     static final int RED_BANNER = 0xFF522B30;
     static final int RED_TEXT = 0xFFFFB4AB;
     static final int GREEN = 0xFF35C66B;
@@ -37,7 +37,29 @@ final class Ui {
     static final int RED_BG = 0xFF5A2D31;
     static final int AMBER = 0xFFE8A33D;
     static final int AMBER_BG = 0xFF4A3A24;
-    static final int ICON_BG = 0xFF3E4559;
+    static int ICON_BG = 0xFF3E4559;
+
+    // theme-dependent extras (see applyTheme)
+    static int ACCENT2 = 0xFF7C9CFF, BG_MID = 0xFF151A2B, HERO = 0xFF3F5FB8, CHIP_TOP = 0xFF4C5E94, CHIP_BOT = 0xFF35406A;
+
+    static final String[] THEME_NAMES = {"Midnight", "AMOLED", "Violet", "Emerald", "Sunset"};
+    //                          accent      accent2     bgTop       bgMid       hero        chipTop     chipBot     card        cardDark    onAccent
+    private static final int[][] THEMES = {
+            {0xFFAAC4FF, 0xFF7C9CFF, 0xFF0D1017, 0xFF151A2B, 0xFF3F5FB8, 0xFF4C5E94, 0xFF35406A, 0xFF2C303B, 0xFF23262E, 0xFF0E2659},
+            {0xFF7CF5C8, 0xFF3DDCA0, 0xFF000000, 0xFF080A10, 0xFF1F7A63, 0xFF1F5E4E, 0xFF133C32, 0xFF14171C, 0xFF0D0F13, 0xFF00382B},
+            {0xFFD0B8FF, 0xFFB08CFF, 0xFF100B1A, 0xFF1C1430, 0xFF6B45C8, 0xFF5A3F94, 0xFF3C2A66, 0xFF2B2438, 0xFF211B2D, 0xFF2D1560},
+            {0xFF8EE6A8, 0xFF5CD68A, 0xFF0B1410, 0xFF10201A, 0xFF2E8B57, 0xFF2F6E4D, 0xFF1F4A34, 0xFF222E28, 0xFF1A241F, 0xFF0A3A1E},
+            {0xFFFFB68A, 0xFFFF9466, 0xFF160F0D, 0xFF241613, 0xFFC4572B, 0xFF9A5A3C, 0xFF6A3A28, 0xFF332522, 0xFF281C1A, 0xFF5A1D00},
+    };
+
+    /** Switches every theme colour. Call before the views are built (the activity recreates itself on change). */
+    static void applyTheme(int i) {
+        int[] t = THEMES[Math.max(0, Math.min(THEMES.length - 1, i))];
+        ACCENT = t[0]; ACCENT2 = t[1]; BG = t[2]; BG_MID = t[3]; HERO = t[4]; CHIP_TOP = t[5]; CHIP_BOT = t[6];
+        CARD = t[7]; CARD_DARK = t[8]; ON_ACCENT = t[9];
+        CHIP_SEL = t[5]; ICON_BG = t[5];
+        BLUE_BANNER = mix(t[2], t[4], 0.35f);
+    }
 
     static int dp(Context c, float v) {
         return Math.round(v * c.getResources().getDisplayMetrics().density);
@@ -107,7 +129,7 @@ final class Ui {
 
     static LinearLayout card(Context c, int color) {
         LinearLayout l = vbox(c);
-        l.setBackground(panel(c, color, mix(color, 0xFF14161C, 0.35f), 24));
+        l.setBackground(panel(c, color, mix(color, 0xFF14161C, 0.35f), 26));
         int p = dp(c, 16);
         l.setPadding(p, p, p, p);
         return l;
@@ -138,7 +160,10 @@ final class Ui {
         TextView t = text(c, label, 15, selected ? TEXT : MUTED, selected);
         t.setSingleLine(true);
         t.setGravity(Gravity.CENTER);
-        t.setBackground(ripple(selected ? round(c, CHIP_SEL, 12) : outline(c, 0x00000000, OUTLINE, 12)));
+        GradientDrawable on = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{CHIP_TOP, CHIP_BOT});
+        on.setCornerRadius(dp(c, 14));
+        on.setStroke(dp(c, 1), (ACCENT & 0x00FFFFFF) | 0x88000000);
+        t.setBackground(ripple(selected ? on : outline(c, 0x00000000, 0x66FFFFFF, 14)));
         t.setPadding(dp(c, 16), dp(c, 10), dp(c, 16), dp(c, 10));
         t.setClickable(true);
         t.setOnClickListener(l);
@@ -161,7 +186,9 @@ final class Ui {
     static TextView primaryButton(Context c, String label, View.OnClickListener l) {
         TextView t = text(c, label, 16, ON_ACCENT, true);
         t.setGravity(Gravity.CENTER);
-        t.setBackground(ripple(round(c, ACCENT, 26)));
+        GradientDrawable pg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{ACCENT, ACCENT2});
+        pg.setCornerRadius(dp(c, 26));
+        t.setBackground(ripple(pg));
         t.setPadding(dp(c, 20), dp(c, 14), dp(c, 20), dp(c, 14));
         t.setClickable(true);
         t.setOnClickListener(l);
@@ -254,5 +281,21 @@ final class Ui {
         float wdp = c.getResources().getConfiguration().screenWidthDp;
         float avail = Math.min(wdp, MAX_CONTENT_DP) - 32;
         return avail >= 700 ? 4 : avail >= 520 ? 3 : 2;
+    }
+
+    /** Tile / card background: soft gradient tinted with an accent colour and a hairline accent border. */
+    static GradientDrawable tinted(Context c, int accent, float radiusDp) {
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{mix(mix(CARD, 0xFFFFFFFF, 0.06f), accent, 0.16f), mix(CARD_DARK, 0xFF000000, 0.15f)});
+        g.setCornerRadius(dp(c, radiusDp));
+        g.setStroke(dp(c, 1), (accent & 0x00FFFFFF) | 0x44000000);
+        return g;
+    }
+
+    /** Small uppercase section label with a coloured dot. */
+    static TextView section(Context c, String label, int accent) {
+        TextView t = text(c, "●  " + label.toUpperCase(java.util.Locale.US), 12, accent, true);
+        t.setLetterSpacing(0.12f);
+        return t;
     }
 }
