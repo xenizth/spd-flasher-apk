@@ -11,8 +11,8 @@ android {
         applicationId 'com.spdflasher'
         minSdk 24
         targetSdk 34
-        versionCode 10
-        versionName "1.9"
+        versionCode 12
+        versionName "2.1"
 
         // 32-bit and 64-bit ARM phones (the source repo cares a lot about arm32)
         ndk {
