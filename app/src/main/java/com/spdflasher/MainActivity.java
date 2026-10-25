@@ -1934,9 +1934,31 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         final EditText input = dialogField("Type " + word + " to confirm", "");
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
                 | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-        final AlertDialog dlg = new AlertDialog.Builder(this, R.style.SpdDialog).setTitle(title).setMessage(msg).setView(dialogBox(input))
+
+        // Message goes inside a scrollable panel, the confirm field is pinned below it
+        // (setMessage+setView together gets the field clipped off-screen on long text).
+        TextView body = Ui.text(this, msg, 15, Ui.TEXT, false);
+        int pad = dp(20);
+        FrameLayout sc = new FrameLayout(this);
+        sc.addView(body, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(sc);
+        LinearLayout box = Ui.vbox(this);
+        box.setPadding(pad, dp(8), pad, 0);
+        LinearLayout.LayoutParams scLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f);
+        box.addView(scroll, scLp);
+        box.addView(Ui.text(this, "Type " + word + " below, then press Proceed", 13, Ui.MUTED, false),
+                Ui.fullLp(this, 12, 4));
+        box.addView(input, Ui.fullLp(this, 4, 4));
+
+        AlertDialog dlg = new AlertDialog.Builder(this, R.style.SpdDialog).setTitle(title)
+                .setView(box)
                 .setNegativeButton("Cancel", null).setPositiveButton("Proceed", (d, w) -> ok.run()).create();
         dlg.show();
+        if (dlg.getWindow() != null) {
+            dlg.getWindow().setLayout(Math.min(dp(360), getResources().getDisplayMetrics().widthPixels - dp(32)),
+                    WindowManager.LayoutParams.WRAP_CONTENT);
+        }
         gateOnWord(dlg, input, word);
     }
 
