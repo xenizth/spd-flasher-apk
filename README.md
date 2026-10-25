@@ -85,12 +85,22 @@ Spd_dump_termux repo.
 - **Repartition** tile: pick a partition-list XML (`<Partition id="name" size="MB"/>`), it is validated like spd_dump does, then applied after a typed confirmation. Erases data.
 - **Backups** go to `/storage/emulated/0/SPD-FLASHER` (needs "All files access"; falls back to the app folder).
 - New logo / launcher icon.
-- Bootloader unlock is not included.
+- **Bootloader unlock (new):** UMS9230 (T606/T616) devices. Guided flow on the
+  Operations tab (*Danger zone -> Bootloader Unlock*): reads the stock
+  `splloader` + `uboot`, patches them offline (ports of TomKing's `chsize` and
+  `gen_spl-unlock` from the CVE-2022-38694_unlock_bootloader repo), flashes the
+  UMS9230 unlock U-Boot (`fdl2-cboot.bin`, universal EMMC build, release 1.72),
+  boots the patched SPL once so the unlock state is written, checks it
+  (`read_part miscdata 8192 64`), then restores the loaders. Several download-mode
+  reconnections; the phone does not boot normally until the last step.
 - Loaders folder: `/storage/emulated/0/SPD-FLASHER/FDLS/<chipset>/<brand>/` (fdl1.bin, fdl2.bin), e.g. `FDLS/ums9230/infinix`.
 
 
 ## Credits
 - `spd_dump` by TomKing062 and contributors; Termux `--usb-fd` variant from Seuj09/Spd_dump_termux.
+- Bootloader unlock flow and the `chsize` / `gen_spl-unlock` patch steps are from
+  TomKing062/CVE-2022-38694_unlock_bootloader (the bundled `fdl2-cboot.bin` loader is
+  from its release 1.72); see the upstream repos before distributing a built APK.
 - libusb 1.0.27 (LGPL-2.1).
 - App by Xenizth.
 

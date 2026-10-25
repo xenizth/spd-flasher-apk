@@ -848,6 +848,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 new Tile("🔒", "AVB 1", 1, "Enable Verity", "verity 1: turn dm-verity back on", this::opVerityOn),
                 new Tile("🧹", "ERASE", 2, "Erase Persist", "Wipe the persist partition (backup offered)", this::opErasePersist),
                 new Tile("🧩", "REPART", 2, "Repartition", "Apply a partition-list XML you choose (erases all data)", this::opRepartition),
+                new Tile("🔓", "UNLOCK BL", 2, "Bootloader Unlock", "Patch stock SPL + uboot and flash them (CVE-2022-38694, UMS9230)", this::opUnlock),
                 new Tile("🛠️", "RECOVERY", 3, "Reboot Recovery", "Reboot the device into recovery", () -> opReboot(1)),
                 new Tile("⚡", "FASTBOOT", 3, "Reboot Fastboot", "Reboot the device into fastbootd", () -> opReboot(2)),
                 new Tile("📴", "POWER", 3, "Power Off Device", "Shut the device down", () -> opReboot(3)),
@@ -1042,15 +1043,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         File out = new File(workDir, "misc-wipe.bin");
         try {
             assetCopy("misc-wipe.bin", out);
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            try (InputStream in = new FileInputStream(out)) {
-                byte[] buf = new byte[4096];
-                int n;
-                while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
-            }
-            StringBuilder hex = new StringBuilder();
-            for (byte x : md.digest()) hex.append(String.format(Locale.US, "%02x", x));
-            if (!hex.toString().equals(MISC_WIPE_SHA256) || out.length() != 2048) {
+            if (!MISC_WIPE_SHA256.equals(fileSha256(out)) || out.length() != 2048) {
                 toast("Wipe image failed its integrity check - not running");
                 return null;
             }
@@ -1059,6 +1052,18 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             toast("Could not prepare the wipe image: " + e.getMessage());
             return null;
         }
+    }
+
+    private String fileSha256(File f) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        try (InputStream in = new FileInputStream(f)) {
+            byte[] buf = new byte[4096];
+            int n;
+            while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
+        }
+        StringBuilder hex = new StringBuilder();
+        for (byte x : md.digest()) hex.append(String.format(Locale.US, "%02x", x));
+        return hex.toString();
     }
 
     private void opSlot(final String slot) {
@@ -1226,38 +1231,59 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     /** @param exitMode 0..3 index into REBOOT_CMDS, or -1 to leave the session open for typed commands */
     private void startSession(List<String> actions, int exitMode) {
-        if (busy) { toast("A session is already running"); return; }
-        String problem = profileProblem();
-        if (problem != null) { toast(problem); return; }
+        List<String> args = buildSessionArgs(actions, exitMode, true);
+        if (args != null) startSessionFull(args);
+    }
+
+    /**
+     * Standard download-mode argument list: loaders, then the FDL2 stage verbs.
+     * @param execFdl2 false for a stub-only session (bare FDL1), used by the unlock flow
+     */
+    private List<String> buildSessionArgs(List<String> actions, int exitMode, boolean execFdl2) {
         List<String> args = new ArrayList<>();
         args.add("--verbose"); args.add("1");
         String exec = hexMode == 0 ? addr("exec") : hexMode == 1 ? addr("alt") : "";
         if (!exec.isEmpty()) {
-            if (!ADDR.matcher(exec).matches()) { toast("Invalid exec_addr in the Device tab"); return; }
+            if (!ADDR.matcher(exec).matches()) { toast("Invalid exec_addr in the Device tab"); return null; }
             args.add("exec_addr"); args.add(exec);
         }
         args.add("fdl"); args.add(fdlFile(1).getAbsolutePath()); args.add(addr("fdl1"));
-        args.add("fdl"); args.add(fdlFile(2).getAbsolutePath()); args.add(addr("fdl2"));
-        args.add("exec");
+        if (execFdl2) {
+            args.add("fdl"); args.add(fdlFile(2).getAbsolutePath()); args.add(addr("fdl2"));
+            args.add("exec");
+        }
         args.add("path"); args.add(workDir.getAbsolutePath());
         args.addAll(actions);
         if (exitMode >= 0) args.add(REBOOT_CMDS[exitMode]);
+        return args;
+    }
+
+    /** Runs one spd_dump process; hands the result to {@link #sessionDone} on the main thread afterwards. */
+    private void startSessionFull(final List<String> args) {
+        if (busy) { toast("A session is already running"); return; }
+        String problem = profileProblem();
+        if (problem != null) { toast(problem); return; }
 
         int wait = Math.max(5, Math.min(600, prefs.getInt("wait", 60)));
         runner.setRoot(rootMode);
         runner.setSharedDir(backupDir);
+        final StepDone done = sessionDone;
+        sessionDone = null;
         setBusy(true);
         selectTab(TAB_CONSOLE);
-        final List<String> finalArgs = args;
-        final int finalWait = wait;
         new Thread(() -> {
-            runner.run(workDir, finalArgs, finalWait);
+            int rc = runner.run(workDir, args, wait);
             main.post(() -> {
                 setBusy(false);
                 renderFiles();
+                if (done != null) done.go(rc == 0);
             });
         }, "spd-session").start();
     }
+
+    private interface StepDone { void go(boolean ok); }
+
+    private StepDone sessionDone;
 
     private void setBusy(boolean b) {
         busy = b;
@@ -1266,6 +1292,253 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (!b && statusText.startsWith("Waiting")) status("");
         updateStatusLine();
+    }
+
+    // ------------------------------------------------------------------ bootloader unlock (CVE-2022-38694)
+
+    /** The unlock U-Boot (fdl2-cboot), TomKing's UMS9230 universal EMMC build, release 1.72. */
+    private static final String FDL2_CBOOT_SHA256 =
+            "7e047dc508911f02d6d9f56f0fb3cec1d4067be55e9ffb3bb65e372b9d3ebdf6";
+
+    private File unlockWork(String n) { return new File(workDir, n); }
+
+    private File unlockDump(String n) { return new File(backupDir, n); }
+
+    private void opUnlock() {
+        if (busy) { toast("A session is running"); return; }
+        String problem = profileProblem();
+        if (problem != null) { toast(problem); return; }
+        if (!"ums9230".equals(chipId)) {
+            toast("Bootloader unlock needs a UMS9230 (T606/T616) profile - the bundled unlock loader is a UMS9230 build.");
+            return;
+        }
+        String msg = "Patch-and-flash method by TomKing062 (CVE-2022-38694), the same developer as the bundled spd_dump.\n\n"
+                + "What happens:\n"
+                + "1. Back up the stock splloader and uboot, then erase SPL - the phone will only enter download mode until the last step.\n"
+                + "2. The SPL is patched offline: its signature check is NOP-ed out.\n"
+                + "3. A modified U-Boot (cboot) is flashed to uboot and booted once through the patched SPL; it writes the unlock state.\n"
+                + "4. The unlock state is checked (miscdata), then stock loaders go back and misc is wiped.\n"
+                + "Writing the patched SPL back keeps the signature bypass (that is what makes the unlock permanent).\n\n"
+                + "Warnings: the phone will NOT boot normally until step 4 finishes; keep the cable and this screen handy. A wrong\n"
+                + "loader or partition can brick the phone. Back up persist and NV data first (Operations tab). Follow the prompts\n"
+                + "between the download-mode reconnections.";
+        confirmTyped("Unlock bootloader (UMS9230)", msg, "UNLOCK", this::unlockStageBackup);
+    }
+
+    private void unlockFail(String step, final Runnable retry) {
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Unlock step failed")
+                .setMessage("The '" + step + "' step failed - details are in the Console.\n\n"
+                        + "The phone may be download-mode-only right now: it does not boot normally until the restore step runs. "
+                        + "You can retry this step, or stop here and re-run 'Bootloader unlock' later (any earlier dumps get overwritten).")
+                .setNegativeButton("Stop the unlock", null)
+                .setPositiveButton("Retry", (d, w) -> retry.run()).show();
+    }
+
+    private void unlockStageBackup() {
+        for (String n : new String[]{"spl-unlock.bin", "u-boot-spl-16k-sign.bin", "uboot_bak.bin",
+                "fdl2-cboot.bin", "miscdata-unlock-stamp.bin", "misc-wipe.bin"})
+            unlockWork(n).delete();
+        List<String> a = list("path", backupDir.getAbsolutePath(),
+                "r", "splloader",
+                "r", "uboot",
+                "path", workDir.getAbsolutePath(),
+                "e", "splloader",
+                "e", "splloader_bak");
+        sessionDone = ok -> { if (ok) unlockPatch(); else unlockFail("backup+erase SPL", this::unlockStageBackup); };
+        startSessionFull(buildSessionArgs(a, 0, true));
+    }
+
+    private void unlockPatch() {
+        final File splDump = unlockDump("splloader.bin"), ubootDump = unlockDump("uboot.bin");
+        final File splUnlock = unlockWork("spl-unlock.bin"), splSign = unlockWork("u-boot-spl-16k-sign.bin");
+        final File ubootBak = unlockWork("uboot_bak.bin");
+        status("Patching loaders...");
+        append("Patching the dumped loaders offline...\n");
+        new Thread(() -> {
+            final Unlocker.SplResult r;
+            final String ubNote;
+            try {
+                byte[] spl = readAll(splDump);
+                Unlocker.SplResult res = Unlocker.genSplUnlock(spl);
+                if (res.patches == 0 && !res.alreadySized) res = Unlocker.genSplUnlockLegacy(spl);
+                r = res;
+                byte[] ub = Unlocker.chsize(readAll(ubootDump));
+                writeAll(ubootBak, ub);
+                ubNote = String.format(Locale.US, "%d bytes", ub.length);
+                writeAll(splUnlock, r.data);
+                writeAll(splSign, r.data);
+            } catch (Exception e) {
+                main.post(() -> unlockFail("patch (" + e.getMessage() + ")", this::unlockStageBackup));
+                return;
+            }
+            main.post(() -> {
+                final int sites = r.patches;
+                append("splloader: patched to " + r.data.length + " bytes, " + sites + " signature site(s) NOP-ed"
+                        + (r.alreadySized ? " (image already real-sized - dumped SPL looks odd)" : "") + "\n"
+                        + "uboot: trimmed to " + ubNote + " total for the restore copy\n");
+                if (r.alreadySized || sites == 0) {
+                    unlockFail("patch (no signature-check site found - wrong device firmware?)", this::unlockStageBackup);
+                    return;
+                }
+                unlockStageErase();
+            });
+        }, "unlock-patch").start();
+    }
+
+    private void unlockStageErase() {
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Step 2/5 - confirm loaders erased")
+                .setMessage("Loaders patched.\n\nUnplug the phone, put it back into download mode (key combo while plugging the cable) and keep it connected.\n\n"
+                        + "This session erases splloader and splloader_bak once more, then reboots the phone into download mode again.")
+                .setNegativeButton("Stop the unlock", null)
+                .setPositiveButton("Continue", (d, w) -> {
+                    sessionDone = ok -> { if (ok) unlockStageCboot(); else unlockFail("erase SPL", this::unlockStageErase); };
+                    startSessionFull(buildSessionArgs(list("e", "splloader", "e", "splloader_bak"), 0, true));
+                }).show();
+    }
+
+    private void unlockStageCboot() {
+        File cboot = unlockWork("fdl2-cboot.bin");
+        if (!prepareCboot(cboot)) return;
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Step 3/5 - flash modified U-Boot")
+                .setMessage("Writes the UMS9230 unlock U-Boot (fdl2-cboot, universal EMMC build) into the uboot partition, then reboots.\n\n"
+                        + "If your storage is UFS (not EMMC) this build may not fit - check 'size_part uboot' against "
+                        + sizeText(cboot.length()) + " or stop.\n\nUnplug the phone and enter download mode again before continuing.")
+                .setNegativeButton("Stop the unlock", null)
+                .setPositiveButton("Continue", (d, w) -> {
+                    sessionDone = ok -> { if (ok) unlockStageUnlock(1); else unlockFail("flash cboot", this::unlockStageCboot); };
+                    startSessionFull(buildSessionArgs(list("w", "uboot", cboot.getAbsolutePath()), 0, true));
+                }).show();
+    }
+
+    private boolean prepareCboot(File out) {
+        try {
+            assetCopy("fdl/ums9230/fdl2-cboot.bin", out);
+        } catch (IOException e) {
+            toast("Could not unpack the unlock loader: " + e.getMessage());
+            return false;
+        }
+        try {
+            if (!FDL2_CBOOT_SHA256.equals(fileSha256(out))) {
+                out.delete();
+                toast("fdl2-cboot failed its integrity check - not running");
+                return false;
+            }
+        } catch (Exception e) {
+            toast("Could not validate fdl2-cboot: " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    private void unlockStageUnlock(final int attempt) {
+        final File splUnlock = unlockWork("spl-unlock.bin");
+        if (!splUnlock.isFile()) { unlockFail("unlock boot (patched SPL missing)", this::unlockStageBackup); return; }
+        final String a1 = addr("fdl1");
+        if (!ADDR.matcher(a1).matches()) { toast("Invalid FDL1 address in the Device tab"); return; }
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Step 4/5 - run the unlock" + (attempt > 1 ? " (try " + attempt + ")" : ""))
+                .setMessage("Unplug the phone and enter download mode again.\n\n"
+                        + "The app sends the PATCHED SPL to RAM and then just waits. Watch the console: as soon as the download finishes, UNPLUG the USB cable.\n"
+                        + "The patched SPL then boots the modified U-Boot from the uboot partition, which writes the unlock state. The session ends "
+                        + "when the cable is pulled ('device removed, exiting').\n\nThis may need to run twice - you get another try next.")
+                .setNegativeButton("Stop the unlock", null)
+                .setPositiveButton("Send patched SPL", (d, w) -> {
+                    List<String> args = new ArrayList<>();
+                    args.add("--verbose"); args.add("1");
+                    String exec = hexMode == 0 ? addr("exec") : hexMode == 1 ? addr("alt") : "";
+                    if (!exec.isEmpty()) {
+                        if (!ADDR.matcher(exec).matches()) { toast("Invalid exec_addr in the Device tab"); return; }
+                        args.add("exec_addr"); args.add(exec);
+                    }
+                    args.add("fdl"); args.add(splUnlock.getAbsolutePath()); args.add(a1);
+                    sessionDone = ok -> {
+                        if (ok) {
+                            new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Unlock boot ran")
+                                    .setMessage("The session ended (cable pulled). The modified U-Boot should have written the unlock state.\n\n"
+                                            + "Run it once more (\"may need twice\"), or check whether the phone is unlocked now (step 5).")
+                                    .setNegativeButton("Run again", (d2, w2) -> unlockStageUnlock(attempt + 1))
+                                    .setPositiveButton("Check state", (d2, w2) -> unlockStageCheck()).show();
+                        } else {
+                            unlockFail("unlock boot", () -> unlockStageUnlock(attempt));
+                        }
+                    };
+                    startSessionFull(args);
+                }).show();
+    }
+
+    private void unlockStageCheck() {
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Step 5/5 - check unlock state")
+                .setMessage("Unplug the phone and enter download mode again.\n\n"
+                        + "The app reads the unlock-state stamp (miscdata, offset 8192, 64 bytes). All zeros = still locked; otherwise the phone reports unlocked.")
+                .setNegativeButton("Stop the unlock", null)
+                .setPositiveButton("Continue", (d, w) -> {
+                    final File stamp = unlockWork("miscdata-unlock-stamp.bin");
+                    stamp.delete();
+                    sessionDone = ok -> { if (ok) unlockCheckResult(); else unlockFail("state check", this::unlockStageCheck); };
+                    startSessionFull(buildSessionArgs(
+                            list("read_part", "miscdata", "8192", "64", stamp.getAbsolutePath()), 0, true));
+                }).show();
+    }
+
+    private void unlockCheckResult() {
+        final File stamp = unlockWork("miscdata-unlock-stamp.bin");
+        boolean unlocked;
+        String preview;
+        try {
+            byte[] b = readAll(stamp);
+            unlocked = !Unlocker.stampAllZero(b, 64);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < Math.min(32, b.length); i++) sb.append(String.format(Locale.US, "%02X", 0xFF & b[i]));
+            preview = sb.toString();
+        } catch (IOException e) {
+            toast("Could not read the state dump: " + e.getMessage());
+            return;
+        }
+        if (unlocked) {
+            new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Bootloader state: UNLOCKED")
+                    .setMessage("The 64-byte state at miscdata offset 8192 is populated (starts with: "
+                            + preview + ").\n\nLast step: restore the loaders and wipe misc so the phone boots normally.")
+                    .setNegativeButton("Stop the unlock", null)
+                    .setPositiveButton("Continue", (d, w) -> unlockStageRestore()).show();
+        } else {
+            new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Bootloader state: still locked")
+                    .setMessage("The state stamp is all zeros. Run the unlock boot again (step 4) - the state write may need to run twice.")
+                    .setNegativeButton("Stop the unlock", null)
+                    .setPositiveButton("Run unlock again", (d, w) -> unlockStageUnlock(1)).show();
+        }
+    }
+
+    private void unlockStageRestore() {
+        final File splSign = unlockWork("u-boot-spl-16k-sign.bin"), ubootBak = unlockWork("uboot_bak.bin");
+        final File bcb = prepareWipeBcb();
+        if (!splSign.isFile() || !ubootBak.isFile() || bcb == null) {
+            toast("Restore files missing - run the unlock flow again");
+            return;
+        }
+        List<String> a = list("path", backupDir.getAbsolutePath(), "r", "boot",
+                "path", workDir.getAbsolutePath(),
+                "w", "splloader", splSign.getAbsolutePath(),
+                "w", "uboot", ubootBak.getAbsolutePath(),
+                "w", "misc", bcb.getAbsolutePath());
+        confirmTyped("Finish unlock: flash loaders back",
+                "Writes the patched SPL to splloader, the stock uboot backup to uboot, and the recovery wipe to misc, then reboots.\n\n"
+                        + "The patched SPL keeps the signature bypass, so the phone boots normally with the bootloader reported "
+                        + "unlocked. OTA updates and warranty may stop working - keep the backups in Backup Files.",
+                "RESTORE", () -> {
+                    sessionDone = ok -> {
+                        if (ok) unlockFinished();
+                        else unlockFail("restore", this::unlockStageRestore);
+                    };
+                    startSessionFull(buildSessionArgs(a, 0, true));
+                });
+    }
+
+    private void unlockFinished() {
+        append("\nBootloader unlock finished. splloader.bin and uboot.bin stay in Backup Files for a future relock.\n\n");
+        new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Bootloader unlock finished")
+                .setMessage("The phone reboots now and should boot normally while reporting an unlocked bootloader.\n\n"
+                        + "Keep the backups (splloader.bin and uboot.bin in Backup Files) in case something breaks.\n"
+                        + "OTA updates may not install anymore from now on.")
+                .setPositiveButton("Close", null).show();
     }
 
     // ------------------------------------------------------------------ Files tab
@@ -1817,6 +2090,21 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         File[] kids = f.listFiles();
         if (kids != null) for (File k : kids) deleteRecursive(k);
         f.delete();
+    }
+
+    private static byte[] readAll(File f) throws IOException {
+        byte[] b = new byte[(int) f.length()];
+        try (InputStream in = new FileInputStream(f)) {
+            int off = 0, n;
+            while (off < b.length && (n = in.read(b, off, b.length - off)) > 0) off += n;
+        }
+        return b;
+    }
+
+    private static void writeAll(File f, byte[] b) throws IOException {
+        try (OutputStream out = new FileOutputStream(f)) {
+            out.write(b);
+        }
     }
 
     private void assetCopy(String asset, File dest) throws IOException {
