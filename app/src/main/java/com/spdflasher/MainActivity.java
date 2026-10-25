@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -320,14 +319,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private View buildRoot() {
         LinearLayout root = Ui.vbox(this);
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{Ui.BG, Ui.BG_MID, Ui.BG});
-        root.setBackground(bg);
+        root.setBackgroundColor(Ui.BG);
 
         // top bar
         LinearLayout bar = new Ui.CappedRow(this);
         bar.setPadding(dp(8), dp(8), dp(8), dp(4));
-        bar.addView(barButton("ℹ️", v -> showAbout()));
+        bar.addView(barButton(Icons.INFO, v -> showAbout()));
         ImageView logo = new ImageView(this);
         logo.setImageDrawable(new Logo());
         bar.addView(logo, Ui.lp(this, dp(34), dp(34), 0, 0, 10, 0));
@@ -335,8 +332,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         titleBox.addView(Ui.text(this, "SPD Tool", 22, Ui.TEXT, true));
         titleBox.addView(Ui.text(this, "by Xenizth", 12, Ui.ACCENT, false));
         bar.addView(titleBox, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        bar.addView(barButton("🔄", v -> onRefresh()));
-        bar.addView(barButton("⚙️", v -> showSettings()));
+        bar.addView(barButton(Icons.REFRESH, v -> onRefresh()));
+        bar.addView(barButton(Icons.SETTINGS, v -> showSettings()));
         LinearLayout.LayoutParams barLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         barLp.gravity = Gravity.CENTER_HORIZONTAL;
         root.addView(bar, barLp);
@@ -362,12 +359,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         content.addView(console, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // bottom navigation: floating rounded bar, selected tab gets a glowing pill
+        // bottom navigation: floating rounded bar, selected tab gets a pill
         LinearLayout nav = new Ui.CappedRow(this);
-        nav.setBackground(Ui.panel(this, Ui.CARD, Ui.CARD_DARK, 30));
+        nav.setBackground(Ui.panel(this, Ui.CARD, 30));
         nav.setPadding(dp(6), dp(8), dp(6), dp(8));
         nav.setElevation(dp(10));
-        String[] glyphs = {"📱", "🧰", "📁", "🖥️"};
+        int[] glyphs = {Icons.PHONE, Icons.CHIP, Icons.FOLDER, Icons.TERMINAL};
         String[] labels = {"Device", "Operations", "Files", "Console"};
         for (int i = 0; i < 4; i++) {
             final int idx = i;
@@ -375,9 +372,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             item.setGravity(Gravity.CENTER);
             item.setClickable(true);
             item.setOnClickListener(v -> selectTab(idx));
-            TextView pill = Ui.text(this, glyphs[i], 22, Ui.TEXT, false);
-            pill.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 22);
-            pill.setGravity(Gravity.CENTER);
+            View pill = Ui.icon(this, glyphs[i], 22, Ui.TEXT);
             pill.setLayoutParams(new LinearLayout.LayoutParams(dp(60), dp(34)));
             navPills[i] = pill;
             item.addView(pill);
@@ -395,14 +390,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         return root;
     }
 
-    private TextView barButton(String glyph, View.OnClickListener l) {
-        TextView t = Ui.text(this, glyph, 22, Ui.ACCENT, false);
-        t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 22);
-        t.setGravity(Gravity.CENTER);
-        t.setClickable(true);
-        t.setOnClickListener(l);
-        t.setLayoutParams(new LinearLayout.LayoutParams(dp(48), dp(48)));
-        return t;
+    private View barButton(int kind, View.OnClickListener l) {
+        View v = Ui.icon(this, kind, 22, Ui.ACCENT);
+        v.setClickable(true);
+        v.setOnClickListener(l);
+        v.setLayoutParams(new LinearLayout.LayoutParams(dp(48), dp(48)));
+        return v;
     }
 
     private LinearLayout addScrollTab(FrameLayout parent, int tab) {
@@ -424,7 +417,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         for (int i = 0; i < 4; i++) {
             tabViews[i].setVisibility(i == tab ? View.VISIBLE : View.GONE);
             boolean sel = i == tab;
-            navPills[i].setBackground(sel ? Ui.panel(this, Ui.CHIP_TOP, Ui.CHIP_BOT, 17) : null);
+            navPills[i].setBackground(sel ? Ui.panel(this, Ui.CHIP_TOP, 17) : null);
             navPills[i].setAlpha(sel ? 1f : 0.6f);
             navLabels[i].setTextColor(sel ? Ui.ACCENT : Ui.MUTED);
             navLabels[i].setTypeface(sel ? android.graphics.Typeface.DEFAULT_BOLD : android.graphics.Typeface.DEFAULT);
@@ -483,7 +476,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         // hero
         LinearLayout hero = Ui.hbox(this);
         hero.setGravity(Gravity.CENTER_VERTICAL);
-        hero.setBackground(Ui.panel(this, Ui.HERO, Ui.mix(Ui.BG, 0xFF000000, 0.3f), 30));
+        hero.setBackground(Ui.panel(this, Ui.HERO, 30));
         hero.setPadding(dp(18), dp(18), dp(18), dp(18));
         ImageView hl = new ImageView(this);
         hl.setImageDrawable(new Logo());
@@ -494,7 +487,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  Root / No Root", 13, Ui.MUTED, false), Ui.fullLp(this, 2, 0));
         LinearLayout pills = Ui.hbox(this);
         boolean linked = !unisocDevices().isEmpty();
-        TextView linkBadge = Ui.badge(this, linked ? "●  CONNECTED" : "●  NO DEVICE", linked ? Ui.GREEN : Ui.RED_TEXT,
+        TextView linkBadge = Ui.badge(this, linked ? "CONNECTED" : "NO DEVICE", linked ? Ui.GREEN : Ui.RED_TEXT,
                 linked ? Ui.GREEN_BG : Ui.RED_BG);
         pills.addView(linkBadge, Ui.wrapLp(this, 0, 0, 8, 0));
         if (pulse != null) pulse.cancel();
@@ -515,7 +508,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout c1 = Ui.card(this, Ui.CARD);
         LinearLayout head = Ui.hbox(this);
         boolean on = !devs.isEmpty();
-        head.addView(Ui.iconBox(this, on ? "🔌" : "⚠️", on ? Ui.GREEN_BG : Ui.RED_BG,
+        head.addView(Ui.iconBox(this, on ? Icons.PLUG : Icons.WARNING, on ? Ui.GREEN_BG : Ui.RED_BG,
                 on ? Ui.GREEN : Ui.RED_TEXT, 48), Ui.wrapLp(this, 0, 0, 14, 0));
         head.addView(Ui.text(this, on ? "Unisoc Device Connected" : "No Device Connected", 20, Ui.TEXT, true),
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -533,7 +526,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         // connection mode card
         LinearLayout cm = Ui.card(this, Ui.CARD);
-        cm.addView(Ui.text(this, "🔑  Connection Mode", 17, Ui.ACCENT, true));
+        cm.addView(cardHeader(Icons.KEY, "Connection Mode"));
         HorizontalScrollView modes = Ui.chipRow(this);
         Ui.addChip(modes, Ui.chip(this, "No Root (Android USB)", !rootMode, v -> setRootMode(false)));
         Ui.addChip(modes, Ui.chip(this, "Root (su)", rootMode, v -> setRootMode(true)));
@@ -549,27 +542,27 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         // toolchain card
         LinearLayout c2 = Ui.card(this, Ui.CARD);
-        c2.addView(Ui.text(this, "🧰  Platform Binaries & Toolchain", 17, Ui.ACCENT, true));
+        c2.addView(cardHeader(Icons.CHIP, "Platform Binaries & Toolchain"));
         c2.addView(Ui.text(this, "Everything is built into the app. No Termux or downloads, and root is optional.", 14, Ui.MUTED, false),
                 Ui.fullLp(this, 6, 12));
         boolean fdlOk = hasProfile() && fdlFile(1).isFile() && fdlFile(2).isFile();
         LinearLayout r1 = Ui.hbox(this);
-        r1.addView(miniStatus("⚡", "spd_dump", "Spreadtrum BROM Engine", true), miniLp(true));
-        r1.addView(miniStatus("🔌", "libusb 1.0.27", "USB host driver", true), miniLp(false));
+        r1.addView(miniStatus(Icons.BOLT, "spd_dump", "Spreadtrum BROM Engine", true), miniLp(true));
+        r1.addView(miniStatus(Icons.PLUG, "libusb 1.0.27", "USB host driver", true), miniLp(false));
         c2.addView(r1, Ui.fullLp(this, 0, 0));
         LinearLayout r2 = Ui.hbox(this);
-        r2.addView(miniStatus("💾", "FDL pair", hasProfile() ? chipLabel() + " / " + brandLabel() : "No profile", fdlOk),
+        r2.addView(miniStatus(Icons.SAVE, "FDL pair", hasProfile() ? chipLabel() + " / " + brandLabel() : "No profile", fdlOk),
                 miniLp(true));
-        r2.addView(miniStatus("🔄", "Reconnect", "Re-attaches after FDL1", true), miniLp(false));
+        r2.addView(miniStatus(Icons.REFRESH, "Reconnect", "Re-attaches after FDL1", true), miniLp(false));
         c2.addView(r2, Ui.fullLp(this, 8, 0));
         deviceBox.addView(c2, Ui.fullLp(this, 8, 8));
 
         // profile card
         LinearLayout c3 = Ui.card(this, Ui.CARD);
         LinearLayout h3 = Ui.hbox(this);
-        h3.addView(Ui.text(this, "📱  Device Hardware Profile", 17, Ui.ACCENT, true),
+        h3.addView(cardHeader(Icons.PHONE, "Device Hardware Profile"),
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView auto = Ui.text(this, "✨ Auto-Detect", 14, Ui.TEXT, true);
+        TextView auto = Ui.text(this, "Auto-Detect", 14, Ui.TEXT, true);
         auto.setBackground(Ui.ripple(Ui.round(this, Ui.CHIP_SEL, 14)));
         auto.setPadding(dp(14), dp(8), dp(14), dp(8));
         auto.setClickable(true);
@@ -579,12 +572,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         String problem = profileProblem();
         if (!hasProfile()) {
-            c3.addView(Ui.banner(this, "⚠️", "Device setup required: pick a chipset and brand below before running operations.",
+            c3.addView(Ui.banner(this, Icons.WARNING, "Device setup required: pick a chipset and brand below before running operations.",
                     Ui.RED_BANNER, Ui.RED_TEXT), Ui.fullLp(this, 12, 0));
         } else {
             String ok = "Active profile: " + chipLabel() + " / " + brandLabel() + "\n"
                     + (problem == null ? "FDL pair ready" : problem);
-            c3.addView(Ui.banner(this, problem == null ? "✅" : "⚠️", ok,
+            c3.addView(Ui.banner(this, problem == null ? Icons.CHECK : Icons.WARNING, ok,
                     problem == null ? Ui.BLUE_BANNER : Ui.AMBER_BG, problem == null ? Ui.TEXT : Ui.AMBER),
                     Ui.fullLp(this, 12, 0));
         }
@@ -643,6 +636,13 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }, "root-check").start();
     }
 
+    private LinearLayout cardHeader(int kind, String label) {
+        LinearLayout h = Ui.hbox(this);
+        h.addView(Ui.icon(this, kind, 18, Ui.ACCENT), Ui.wrapLp(this, 0, 2, 9, 0));
+        h.addView(Ui.text(this, label, 17, Ui.ACCENT, true));
+        return h;
+    }
+
     private LinearLayout.LayoutParams miniLp(boolean first) {
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         p.leftMargin = dp(first ? 0 : 4);
@@ -650,12 +650,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         return p;
     }
 
-    private View miniStatus(String glyph, String name, String sub, boolean ready) {
+    private View miniStatus(int kind, String name, String sub, boolean ready) {
         LinearLayout l = Ui.card(this, Ui.CARD_DARK);
         l.setBackground(Ui.round(this, Ui.CARD_DARK, 20));
         l.setPadding(dp(14), dp(14), dp(14), dp(14));
         LinearLayout top = Ui.hbox(this);
-        top.addView(Ui.iconBox(this, glyph, ready ? Ui.GREEN_BG : Ui.RED_BG, ready ? Ui.GREEN : Ui.RED_TEXT, 40));
+        top.addView(Ui.iconBox(this, kind, ready ? Ui.GREEN_BG : Ui.RED_BG, ready ? Ui.GREEN : Ui.RED_TEXT, 40));
         View sp = new View(this);
         top.addView(sp, new LinearLayout.LayoutParams(0, 1, 1f));
         top.addView(Ui.badge(this, ready ? "READY" : "MISSING", ready ? Ui.GREEN : Ui.RED_TEXT,
@@ -812,7 +812,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         String problem = profileProblem();
         if (problem != null) {
-            opsBox.addView(Ui.banner(this, "⚠️", problem, Ui.RED_BANNER, Ui.RED_TEXT), Ui.fullLp(this, 0, 12));
+            opsBox.addView(Ui.banner(this, Icons.WARNING, problem, Ui.RED_BANNER, Ui.RED_TEXT), Ui.fullLp(this, 0, 12));
         }
 
         LinearLayout opts = Ui.card(this, Ui.CARD);
@@ -836,25 +836,25 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         opsBox.addView(opts, Ui.fullLp(this, 0, 12));
 
         Tile[] tiles = {
-                new Tile("🚀", "FLASH", 0, "Flash Partitions", "Write every image in Input Files to its partition", this::opFlash),
-                new Tile("📋", "INFO", 0, "Partition Table", "Connect and list the phone's partitions (read-only)", this::opTable),
-                new Tile("📦", "BACKUP", 0, "Backup Partitions", "Dump chosen partitions to Backup Files", this::opBackup),
-                new Tile("📶", "IMEI", 0, "Backup IMEI & NV", "Dump miscdata, prodnv and the modem NV partitions", this::opBackupNv),
-                new Tile("🔄", "RESTORE", 0, "Restore Backup", "Write backed-up .bin files back to the phone", this::opRestore),
-                new Tile("🗑️", "WIPE", 0, "Wipe Userdata", "Factory reset through recovery on the next boot", this::opWipe),
-                new Tile("🅰️", "SLOT A", 1, "Slot A (SPD)", "Switch the active boot slot to A", () -> opSlot("a")),
-                new Tile("🅱️", "SLOT B", 1, "Slot B (SPD)", "Switch the active boot slot to B", () -> opSlot("b")),
-                new Tile("🔓", "AVB 0", 1, "Disable Verity", "verity 0: turn off dm-verity in vbmeta", this::opVerity),
-                new Tile("🛡️", "AVB 3", 1, "Disable Verification", "Turn off verity and verification in vbmeta", this::opVerityAll),
-                new Tile("🔒", "AVB 1", 1, "Enable Verity", "verity 1: turn dm-verity back on", this::opVerityOn),
-                new Tile("🧹", "ERASE", 2, "Erase Persist", "Wipe the persist partition (backup offered)", this::opErasePersist),
-                new Tile("🔑", "FRP", 2, "Remove FRP Lock", "Erase the frp partition so Factory Reset Protection is cleared", this::opEraseFrp),
-                new Tile("🧩", "REPART", 2, "Repartition", "Apply a partition-list XML you choose (erases all data)", this::opRepartition),
-                new Tile("🔓", "UNLOCK BL", 2, "Bootloader Unlock", "Patch stock SPL + uboot and flash them (CVE-2022-38694, UMS9230)", this::opUnlock),
-                new Tile("🛠️", "RECOVERY", 3, "Reboot Recovery", "Reboot the device into recovery", () -> opReboot(1)),
-                new Tile("⚡", "FASTBOOT", 3, "Reboot Fastboot", "Reboot the device into fastbootd", () -> opReboot(2)),
-                new Tile("📴", "POWER", 3, "Power Off Device", "Shut the device down", () -> opReboot(3)),
-                new Tile("💻", "CLI", 4, "Custom spd_dump", "Type your own spd_dump commands", this::opCustom),
+                new Tile(Icons.BOLT, "FLASH", 0, "Flash Partitions", "Write every image in Input Files to its partition", this::opFlash),
+                new Tile(Icons.CLIPBOARD, "INFO", 0, "Partition Table", "Connect and list the phone's partitions (read-only)", this::opTable),
+                new Tile(Icons.BOX, "BACKUP", 0, "Backup Partitions", "Dump chosen partitions to Backup Files", this::opBackup),
+                new Tile(Icons.SIGNAL, "IMEI", 0, "Backup IMEI & NV", "Dump miscdata, prodnv and the modem NV partitions", this::opBackupNv),
+                new Tile(Icons.REFRESH, "RESTORE", 0, "Restore Backup", "Write backed-up .bin files back to the phone", this::opRestore),
+                new Tile(Icons.TRASH, "WIPE", 0, "Wipe Userdata", "Factory reset through recovery on the next boot", this::opWipe),
+                new Tile("A", "SLOT A", 1, "Slot A (SPD)", "Switch the active boot slot to A", () -> opSlot("a")),
+                new Tile("B", "SLOT B", 1, "Slot B (SPD)", "Switch the active boot slot to B", () -> opSlot("b")),
+                new Tile(Icons.UNLOCK, "AVB 0", 1, "Disable Verity", "verity 0: turn off dm-verity in vbmeta", this::opVerity),
+                new Tile(Icons.SHIELD, "AVB 3", 1, "Disable Verification", "Turn off verity and verification in vbmeta", this::opVerityAll),
+                new Tile(Icons.LOCK, "AVB 1", 1, "Enable Verity", "verity 1: turn dm-verity back on", this::opVerityOn),
+                new Tile(Icons.ERASER, "ERASE", 2, "Erase Persist", "Wipe the persist partition (backup offered)", this::opErasePersist),
+                new Tile(Icons.KEY, "FRP", 2, "Remove FRP Lock", "Erase the frp partition so Factory Reset Protection is cleared", this::opEraseFrp),
+                new Tile(Icons.GRID, "REPART", 2, "Repartition", "Apply a partition-list XML you choose (erases all data)", this::opRepartition),
+                new Tile(Icons.UNLOCK, "UNLOCK BL", 2, "Bootloader Unlock", "Patch stock SPL + uboot and flash them (CVE-2022-38694, UMS9230)", this::opUnlock),
+                new Tile(Icons.WRENCH, "RECOVERY", 3, "Reboot Recovery", "Reboot the device into recovery", () -> opReboot(1)),
+                new Tile(Icons.BOLT, "FASTBOOT", 3, "Reboot Fastboot", "Reboot the device into fastbootd", () -> opReboot(2)),
+                new Tile(Icons.POWER, "POWER", 3, "Power Off Device", "Shut the device down", () -> opReboot(3)),
+                new Tile(Icons.TERMINAL, "CLI", 4, "Custom spd_dump", "Type your own spd_dump commands", this::opCustom),
         };
         tileIndex = 0;
         String[] secNames = {"Flash & data", "Boot & security", "Danger zone", "Device control", "Advanced"};
@@ -879,11 +879,16 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private static final int[] SECTION_COLORS = {0xFF5CCFE8, 0xFFE58FE0, 0xFFFF8A5A, 0xFF7ADC96, 0xFFF2CE7B};
 
     private static final class Tile {
+        final int icon;            // flat vector icon kind, 0 if the tile shows a letter
         final String glyph, tag, title, desc;
         final int kind;
         final Runnable action;
+        Tile(int icon, String tag, int kind, String title, String desc, Runnable action) {
+            this.icon = icon; this.glyph = null; this.tag = tag; this.kind = kind; this.title = title;
+            this.desc = desc; this.action = action;
+        }
         Tile(String glyph, String tag, int kind, String title, String desc, Runnable action) {
-            this.glyph = glyph; this.tag = tag; this.kind = kind; this.title = title;
+            this.icon = 0; this.glyph = glyph; this.tag = tag; this.kind = kind; this.title = title;
             this.desc = desc; this.action = action;
         }
     }
@@ -916,7 +921,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             l.animate().alpha(1f).translationY(0f).setStartDelay(Math.min(tileIndex++, 14) * 28L).setDuration(260).start();
         }
         LinearLayout top = Ui.hbox(this);
-        top.addView(Ui.iconBox(this, t.glyph, Ui.mix(Ui.CARD, accent, 0.24f), accent, 46));
+        top.addView(t.icon != 0
+                ? Ui.iconBox(this, t.icon, Ui.mix(Ui.CARD, accent, 0.24f), accent, 46)
+                : Ui.iconBox(this, t.glyph, Ui.mix(Ui.CARD, accent, 0.24f), accent, 46));
         top.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
         top.addView(Ui.badge(this, t.tag, accent, Ui.mix(Ui.CARD, accent, 0.16f)));
         l.addView(top);
@@ -1356,7 +1363,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     // ------------------------------------------------------------------ unlock loaders (custom files)
 
-    private TextView unlockSplLabel, unlockUbLabel, unlockSplClear, unlockUbClear;
+    private TextView unlockSplLabel, unlockUbLabel;
+    private View unlockSplClear, unlockUbClear;
 
     private File customSplFile() { return new File(workDir, "unlock-spl-custom.bin"); }
 
@@ -1406,7 +1414,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         imp.setTextSize(14);
         row.addView(imp, Ui.wrapLp(this, 0, 0, 6, 0));
         File f = spl ? customSplFile() : customUbFile();
-        TextView clr = Ui.text(this, "✕", 18, Ui.MUTED, false);
+        View clr = Ui.icon(this, Icons.CLOSE, 14, Ui.MUTED);
         clr.setPadding(dp(8), dp(6), dp(4), dp(6));
         clr.setClickable(true);
         clr.setOnClickListener(v -> { f.delete(); refreshUnlockRows(); });
@@ -1700,22 +1708,22 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         final List<String[]> fdls = listProfiles();
 
         HorizontalScrollView chips = Ui.chipRow(this);
-        Ui.addChip(chips, Ui.chip(this, "📥  Input Files (" + in.length + ")", filesSub == SUB_INPUT, v -> { filesSub = SUB_INPUT; renderFiles(); }));
-        Ui.addChip(chips, Ui.chip(this, "📦  Backup Files (" + bk.length + ")", filesSub == SUB_BACKUP, v -> { filesSub = SUB_BACKUP; renderFiles(); }));
-        Ui.addChip(chips, Ui.chip(this, "💾  FDLs (" + fdls.size() + ")", filesSub == SUB_FDL, v -> { filesSub = SUB_FDL; renderFiles(); }));
+        Ui.addChip(chips, Ui.chip(this, "Input Files (" + in.length + ")", Icons.DOWNLOAD, filesSub == SUB_INPUT, v -> { filesSub = SUB_INPUT; renderFiles(); }));
+        Ui.addChip(chips, Ui.chip(this, "Backup Files (" + bk.length + ")", Icons.BOX, filesSub == SUB_BACKUP, v -> { filesSub = SUB_BACKUP; renderFiles(); }));
+        Ui.addChip(chips, Ui.chip(this, "FDLs (" + fdls.size() + ")", Icons.SAVE, filesSub == SUB_FDL, v -> { filesSub = SUB_FDL; renderFiles(); }));
         filesBox.addView(chips, Ui.fullLp(this, 8, 12));
 
         if (filesSub == SUB_INPUT) {
-            filesBox.addView(Ui.banner(this, "ℹ️", "Input folder: " + inputDir.getAbsolutePath() + "\nAdd .img / .bin files here (or copy them in with a file manager). Each file is flashed to the partition named like the file (boot.img -> boot).",
+            filesBox.addView(Ui.banner(this, Icons.INFO, "Input folder: " + inputDir.getAbsolutePath() + "\nAdd .img / .bin files here (or copy them in with a file manager). Each file is flashed to the partition named like the file (boot.img -> boot).",
                     Ui.CARD_DARK, Ui.MUTED), Ui.fullLp(this, 0, 12));
             if (in.length == 0) {
-                emptyState("📥", "No Input Images Found", "Tap the button to add boot.img, vbmeta.img, super.img or similar.");
+                emptyState(Icons.DOWNLOAD, "No Input Images Found", "Tap the button to add boot.img, vbmeta.img, super.img or similar.");
             } else {
                 for (final File f : in) filesBox.addView(fileRow(f, false, null), Ui.fullLp(this, 0, 8));
             }
             filesBox.addView(Ui.primaryButton(this, "+  Choose Image Files", v -> pickImages()), Ui.fullLp(this, 8, 0));
         } else if (filesSub == SUB_BACKUP) {
-            filesBox.addView(Ui.banner(this, usingSharedBackup() ? "✅" : "⚠️", "Backup: partitions and NV dumps are stored in:\n"
+            filesBox.addView(Ui.banner(this, usingSharedBackup() ? Icons.CHECK : Icons.WARNING, "Backup: partitions and NV dumps are stored in:\n"
                     + backupDir.getAbsolutePath() + (usingSharedBackup() ? ""
                     : "\n\nThis is the app's private folder. Allow 'All files access' to use "
                     + sharedBackupDir().getAbsolutePath() + " instead."),
@@ -1723,13 +1731,13 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             if (!usingSharedBackup())
                 filesBox.addView(Ui.primaryButton(this, "Allow access to SPD-FLASHER folder", v -> requestStorageAccess()), Ui.fullLp(this, 0, 12));
             if (bk.length == 0) {
-                emptyState("📁", "No Partition Backups Yet", "Run 'Backup Partitions' or 'Backup IMEI & NV' in the Operations tab to create dumps here.");
+                emptyState(Icons.FOLDER, "No Partition Backups Yet", "Run 'Backup Partitions' or 'Backup IMEI & NV' in the Operations tab to create dumps here.");
             } else {
                 for (final File f : bk) filesBox.addView(fileRow(f, false, null), Ui.fullLp(this, 0, 8));
                 filesBox.addView(Ui.outlineButton(this, "Export backups to a folder", v -> exportBackups()), Ui.fullLp(this, 8, 0));
             }
         } else {
-            filesBox.addView(Ui.banner(this, "ℹ️", "Loaders live in " + fdlRoot.getAbsolutePath() + "/<chipset>/<brand>/ (fdl1.bin + fdl2.bin). Drop files there with any file manager, then tap a folder to make it the active profile.",
+            filesBox.addView(Ui.banner(this, Icons.INFO, "Loaders live in " + fdlRoot.getAbsolutePath() + "/<chipset>/<brand>/ (fdl1.bin + fdl2.bin). Drop files there with any file manager, then tap a folder to make it the active profile.",
                     Ui.CARD_DARK, Ui.MUTED), Ui.fullLp(this, 0, 12));
             LinearLayout btns = Ui.hbox(this);
             TextView b1 = Ui.outlineButton(this, "Import FDL1", v -> pickFdl(REQ_FDL1));
@@ -1741,7 +1749,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             filesBox.addView(Ui.text(this, hasProfile() ? "Imports go to: " + chipLabel() + " / " + brandLabel()
                     : "Pick a chipset and brand in the Device tab to enable imports.", 13, Ui.MUTED, false), Ui.fullLp(this, 4, 12));
             if (fdls.isEmpty()) {
-                emptyState("💾", "No Loaders Yet", "Select UMS9230 / Infinix for the built-in example, or import your own FDL1 and FDL2 files.");
+                emptyState(Icons.SAVE, "No Loaders Yet", "Select UMS9230 / Infinix for the built-in example, or import your own FDL1 and FDL2 files.");
             }
             for (final String[] p : fdls) {
                 final File dir = profileDir(p[0], p[1]);
@@ -1758,11 +1766,11 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }
     }
 
-    private void emptyState(String glyph, String title, String body) {
+    private void emptyState(int kind, String title, String body) {
         LinearLayout c = Ui.card(this, Ui.CARD_DARK);
         c.setGravity(Gravity.CENTER_HORIZONTAL);
         c.setPadding(dp(20), dp(32), dp(20), dp(32));
-        TextView icon = Ui.iconBox(this, glyph, Ui.CARD, Ui.MUTED, 72);
+        View icon = Ui.iconBox(this, kind, Ui.CARD, Ui.MUTED, 72);
         c.addView(icon);
         TextView t = Ui.text(this, title, 22, Ui.TEXT, true);
         t.setGravity(Gravity.CENTER);
@@ -1778,18 +1786,22 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout row = Ui.hbox(this);
         row.setBackground(Ui.round(this, Ui.CARD_DARK, 20));
         row.setPadding(dp(14), dp(12), dp(14), dp(12));
-        row.addView(Ui.iconBox(this, "📄", Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
+        row.addView(Ui.iconBox(this, Icons.DOC, Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
         LinearLayout mid = Ui.vbox(this);
         mid.addView(Ui.ellipsized(Ui.text(this, f.getName(), 17, Ui.TEXT, true), 1));
         mid.addView(Ui.text(this, new SimpleDateFormat("M/d/yyyy h:mm a", Locale.US).format(new Date(f.lastModified()))
                 + "  ·  " + sizeText(f.length()), 13, Ui.MUTED, false));
         row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView del = Ui.text(this, "🗑", 20, Ui.RED_TEXT, false);
-        del.setPadding(dp(10), dp(6), dp(4), dp(6));
-        del.setClickable(true);
-        del.setOnClickListener(v -> confirm("Delete file?", f.getName(), "Delete", () -> { f.delete(); renderFiles(); }));
-        row.addView(del);
+        row.addView(delButton(v -> confirm("Delete file?", f.getName(), "Delete", () -> { f.delete(); renderFiles(); })), null);
         return row;
+    }
+
+    private View delButton(View.OnClickListener l) {
+        View v = Ui.icon(this, Icons.TRASH, 20, Ui.RED_TEXT);
+        v.setPadding(dp(10), dp(6), dp(4), dp(6));
+        v.setClickable(true);
+        v.setOnClickListener(l);
+        return v;
     }
 
     private View dirRow(String title, String sub, boolean active, final Runnable tap, final Runnable delete) {
@@ -1798,16 +1810,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         row.setPadding(dp(14), dp(12), dp(14), dp(12));
         row.setClickable(true);
         row.setOnClickListener(v -> tap.run());
-        row.addView(Ui.iconBox(this, "📂", Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
+        row.addView(Ui.iconBox(this, Icons.FOLDER, Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
         LinearLayout mid = Ui.vbox(this);
         mid.addView(Ui.ellipsized(Ui.text(this, title, 17, Ui.TEXT, true), 1));
         mid.addView(Ui.ellipsized(Ui.text(this, (active ? "Active  ·  " : "") + sub, 13, Ui.MUTED, false), 1));
         row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView del = Ui.text(this, "🗑", 20, Ui.RED_TEXT, false);
-        del.setPadding(dp(10), dp(6), dp(4), dp(6));
-        del.setClickable(true);
-        del.setOnClickListener(v -> delete.run());
-        row.addView(del);
+        row.addView(delButton(v -> delete.run()), null);
         return row;
     }
 
@@ -1941,7 +1949,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         box.addView(bar, Ui.fullLp(this, 0, 8));
 
         logScroll = new ScrollView(this);
-        logScroll.setBackground(Ui.panel(this, Ui.BG, Ui.BG_MID, 22));
+        logScroll.setBackground(Ui.panel(this, Ui.CARD_DARK, 22));
         logView = Ui.mono(this, "", 11.5f, Ui.MUTED);
         logView.setPadding(dp(12), dp(10), dp(12), dp(10));
         logView.setTextIsSelectable(true);
@@ -2049,7 +2057,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         what.setGravity(Gravity.CENTER);
         what.setLineSpacing(0, 1.15f);
         box.addView(what, Ui.fullLp(this, 0, 14));
-        box.addView(Ui.banner(this, "⚠️", "A wrong loader or partition can permanently brick a phone. Back up persist and the NV "
+        box.addView(Ui.banner(this, Icons.WARNING, "A wrong loader or partition can permanently brick a phone. Back up persist and the NV "
                 + "partitions first, and keep this screen open while a session runs.", Ui.AMBER_BG, Ui.AMBER), Ui.fullLp(this, 0, 12));
         TextView paths = Ui.mono(this, "Backups  " + backupDir.getAbsolutePath() + "\nInput    " + inputDir.getAbsolutePath()
                 + "\nLoaders  " + fdlRoot.getAbsolutePath(), 11, Ui.MUTED);

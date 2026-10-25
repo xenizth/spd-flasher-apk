@@ -86,7 +86,7 @@ Spd_dump_termux repo.
 - **Connection Mode** (Device tab): *No Root* (Android USB permission) or *Root* (su opens the USB node itself; experimental, untested).
 - **Repartition** tile: pick a partition-list XML (`<Partition id="name" size="MB"/>`), it is validated like spd_dump does, then applied after a typed confirmation. Erases data.
 - **Backups** go to `/storage/emulated/0/SPD-FLASHER` (needs "All files access"; falls back to the app folder).
-- New logo / launcher icon.
+- New logo / launcher icon: flat Android robot head (no gradients), emojis replaced by flat vector icons.
 - **Bootloader unlock (new):** UMS9230 (T606/T616) devices. Guided flow on the
   Operations tab (*Danger zone -> Bootloader Unlock*): reads the stock
   `splloader` + `uboot`, patches them offline (ports of TomKing's `chsize` and

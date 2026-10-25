@@ -2,19 +2,34 @@ package com.spdflasher;
 
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.PixelFormat;
+import android.graphics.Path;
 import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 
-/** The app logo (a microchip with a lightning bolt), drawn in code so it scales cleanly anywhere. */
+/**
+ * The app logo: the Android robot head (bugdroid), drawn flat in code so it scales anywhere.
+ * Green head, punched eyes, two antennas - no gradients. Heads sit on whatever surface is behind.
+ */
 final class Logo extends Drawable {
-    private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Path bolt = new Path();
-    private final RectF r = new RectF();
+    /** Android brand green. */
+    static final int GREEN = 0xFF3DDC84;
+
+    private final int color;
+    private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    Logo() { this(GREEN); }
+
+    Logo(int color) {
+        this.color = color;
+        fill.setColor(color);
+        stroke.setColor(color);
+        stroke.setStyle(Paint.Style.STROKE);
+        stroke.setStrokeWidth(6f);
+        stroke.setStrokeCap(Paint.Cap.ROUND);
+    }
 
     @Override
     public void draw(Canvas c) {
@@ -24,47 +39,32 @@ final class Logo extends Drawable {
         c.translate(getBounds().left + (w - 100 * u) / 2f, getBounds().top + (h - 100 * u) / 2f);
         c.scale(u, u);
 
-        // tile
-        p.setStyle(Paint.Style.FILL);
-        p.setShader(new LinearGradient(0, 0, 100, 100, 0xFF0A0F22, 0xFF182551, Shader.TileMode.CLAMP));
-        r.set(0, 0, 100, 100);
-        c.drawRoundRect(r, 22, 22, p);
-        p.setShader(null);
+        // head: dome + short slab, eyes punched out with even-odd fill (they show the surface behind)
+        c.drawPath(head(), fill);
 
-        // pins
-        p.setColor(0xFF8FE8FF);
-        p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(4f);
-        p.setStrokeCap(Paint.Cap.ROUND);
-        float[] pos = {38f, 50f, 62f};
-        for (float v : pos) {
-            c.drawLine(v, 17f, v, 29f, p);
-            c.drawLine(v, 71f, v, 83f, p);
-            c.drawLine(17f, v, 29f, v, p);
-            c.drawLine(71f, v, 83f, v, p);
-        }
-
-        // chip body
-        p.setStrokeWidth(5f);
-        r.set(29f, 29f, 71f, 71f);
-        c.drawRoundRect(r, 7f, 7f, p);
-
-        // bolt
-        p.setStyle(Paint.Style.FILL);
-        p.setShader(new LinearGradient(40, 30, 60, 70, 0xFF00E5FF, 0xFFFF4FD8, Shader.TileMode.CLAMP));
-        bolt.reset();
-        bolt.moveTo(56f, 33f);
-        bolt.lineTo(39f, 54f);
-        bolt.lineTo(49f, 54f);
-        bolt.lineTo(44f, 68f);
-        bolt.lineTo(62f, 46f);
-        bolt.lineTo(53f, 46f);
-        bolt.close();
-        c.drawPath(bolt, p);
+        // antennas
+        c.drawLine(29f, 24f, 22f, 11.5f, stroke);
+        c.drawLine(71f, 24f, 78f, 11.5f, stroke);
         c.restore();
     }
 
-    @Override public void setAlpha(int a) { p.setAlpha(a); }
-    @Override public void setColorFilter(ColorFilter f) { p.setColorFilter(f); }
+    /** Bugdroid head in a 0..100 grid: dome from x 8..92, top y 18, flat bottom at y 70. */
+    private Path head() {
+        Path p = new Path();
+        p.setFillType(Path.FillType.EVEN_ODD);
+        p.moveTo(8, 60);
+        p.arcTo(new RectF(8, 18, 92, 102), 180, 180); // dome: (8,60) -> (50,18) -> (92,60)
+        p.lineTo(92, 64);
+        p.quadTo(92, 70, 86, 70);
+        p.lineTo(14, 70);
+        p.quadTo(8, 70, 8, 64);
+        p.close();
+        p.addCircle(31, 45, 6.5f, Path.Direction.CW);
+        p.addCircle(69, 45, 6.5f, Path.Direction.CW);
+        return p;
+    }
+
+    @Override public void setAlpha(int a) { }
+    @Override public void setColorFilter(ColorFilter f) { }
     @Override public int getOpacity() { return PixelFormat.TRANSLUCENT; }
 }

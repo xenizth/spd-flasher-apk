@@ -79,12 +79,9 @@ final class Ui {
         return g;
     }
 
-    /** Tonal surface: soft vertical gradient inside a single large-radius container. Flat, like M3. */
-    static Drawable panel(Context c, int top, int bottom, float radiusDp) {
-        float r = dp(c, radiusDp);
-        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{top, bottom});
-        g.setCornerRadius(r);
-        return g;
+    /** Flat tonal surface (no gradient), single color inside a large-radius container. */
+    static Drawable panel(Context c, int color, float radiusDp) {
+        return round(c, color, radiusDp);
     }
 
     static GradientDrawable outline(Context c, int fill, int stroke, float radiusDp) {
@@ -134,10 +131,10 @@ final class Ui {
         return l;
     }
 
-    /** Card container on surfaceContainerHigh. */
+    /** Card container: flat surface on surfaceContainerHigh. */
     static LinearLayout card(Context c, int color) {
         LinearLayout l = vbox(c);
-        l.setBackground(panel(c, color, mix(color, 0xFF000000, 0.22f), 20));
+        l.setBackground(round(c, color, 20));
         int p = dp(c, 16);
         l.setPadding(p, p, p, p);
         return l;
@@ -176,6 +173,21 @@ final class Ui {
         return t;
     }
 
+    /** Chip with an optional leading vector icon (used by the file tabs). */
+    static LinearLayout chip(Context c, String label, int icon, boolean selected, View.OnClickListener l) {
+        LinearLayout w = hbox(c);
+        w.setBackground(selected ? ripple(round(c, CHIP_TOP, 20))
+                : ripple(outline(c, Color.TRANSPARENT, OUTLINE, 20)));
+        w.setPadding(dp(c, 14), dp(c, 10), dp(c, 14), dp(c, 10));
+        w.setClickable(true);
+        w.setOnClickListener(l);
+        if (icon != 0) w.addView(icon(c, icon, 15, selected ? TEXT : MUTED), wrapLp(c, 0, 0, 7, 0));
+        TextView t = text(c, label, 15, selected ? TEXT : MUTED, selected);
+        t.setSingleLine(true);
+        w.addView(t);
+        return w;
+    }
+
     /** Horizontally scrolling row of chips. */
     static HorizontalScrollView chipRow(Context c) {
         HorizontalScrollView sv = new HorizontalScrollView(c);
@@ -209,13 +221,12 @@ final class Ui {
         return t;
     }
 
-    /** Colored strip with a leading glyph. */
-    static LinearLayout banner(Context c, String glyph, CharSequence msg, int bg, int fg) {
+    /** Colored strip with a leading vector icon. */
+    static LinearLayout banner(Context c, int kind, CharSequence msg, int bg, int fg) {
         LinearLayout l = hbox(c);
         l.setBackground(round(c, bg, 16));
         l.setPadding(dp(c, 16), dp(c, 14), dp(c, 16), dp(c, 14));
-        TextView g = text(c, glyph, 20, fg, true);
-        l.addView(g, wrapLp(c, 0, 0, 14, 0));
+        if (kind != 0) l.addView(icon(c, kind, 20, fg), wrapLp(c, 0, 0, 14, 0));
         TextView m = text(c, msg, 14, fg, false);
         m.setLineSpacing(0, 1.2f);
         l.addView(m, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -287,12 +298,30 @@ final class Ui {
         return avail >= 700 ? 4 : avail >= 520 ? 3 : 2;
     }
 
-    /** Tile / card background: tonal container subtly tinted with the accent, like an M3 secondaryContainer. */
+    /** Tile / card background: flat container lightly tinted with the accent tile color. */
     static Drawable tinted(Context c, int accent, float radiusDp) {
-        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{mix(mix(CARD, 0xFFFFFFFF, 0.04f), accent, 0.14f), mix(CARD_DARK, accent, 0.05f)});
-        g.setCornerRadius(dp(c, radiusDp));
-        return g;
+        return round(c, mix(CARD, accent, 0.18f), radiusDp);
+    }
+
+    /** A tinted flat vector icon from {@link Icons} in its own view. */
+    static android.view.View iconBox(Context c, int kind, int bg, int fg, int sizeDp) {
+        android.widget.FrameLayout box = new android.widget.FrameLayout(c);
+        box.setBackground(round(c, bg, sizeDp * 0.28f));
+        box.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
+        box.addView(icon(c, kind, sizeDp * 0.55f, fg), new android.widget.FrameLayout.LayoutParams(
+                dp(c, sizeDp), dp(c, sizeDp), Gravity.CENTER));
+        return box;
+    }
+
+    /** Standalone tinted icon view; icons are pre-scaled, so the view must not scale them. */
+    static android.widget.ImageView icon(Context c, int kind, float sizeDp, int color) {
+        int px = dp(c, sizeDp);
+        android.widget.ImageView v = new android.widget.ImageView(c);
+        Icons d = new Icons(kind, color);
+        d.setBounds(0, 0, px, px);
+        v.setScaleType(android.widget.ImageView.ScaleType.CENTER);
+        v.setImageDrawable(d);
+        return v;
     }
 
     /** Small uppercase section label. */
