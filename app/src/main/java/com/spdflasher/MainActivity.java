@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
 public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private static final int REQ_IMAGES = 1, REQ_FDL1 = 2, REQ_FDL2 = 3, REQ_EXPORT = 4, REQ_XML = 5, REQ_STORAGE = 6,
-            REQ_UNLOCK_SPL = 7, REQ_UNLOCK_UBOOT = 8;
+            REQ_UNLOCK_SPL = 7, REQ_UNLOCK_UBOOT = 8, REQ_PAC = 9;
     private static final int TAB_DEVICE = 0, TAB_OPS = 1, TAB_FILES = 2, TAB_CONSOLE = 3;
     private static final int SUB_INPUT = 0, SUB_BACKUP = 1, SUB_FDL = 2;
 
@@ -837,6 +837,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         Tile[] tiles = {
                 new Tile(Icons.BOLT, "FLASH", 0, "Flash Partitions", "Write every image in Input Files to its partition", this::opFlash),
+                new Tile(Icons.DOWNLOAD, "PAC", 0, "Flash PAC Firmware", "Flash a ResearchDownload .pac package you pick (prompt asks to type continue)", this::opPac),
                 new Tile(Icons.CLIPBOARD, "INFO", 0, "Partition Table", "Connect and list the phone's partitions (read-only)", this::opTable),
                 new Tile(Icons.BOX, "BACKUP", 0, "Backup Partitions", "Dump chosen partitions to Backup Files", this::opBackup),
                 new Tile(Icons.SIGNAL, "IMEI", 0, "Backup IMEI & NV", "Dump miscdata, prodnv and the modem NV partitions", this::opBackupNv),
@@ -848,7 +849,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 new Tile(Icons.SHIELD, "AVB 3", 1, "Disable Verification", "Turn off verity and verification in vbmeta", this::opVerityAll),
                 new Tile(Icons.LOCK, "AVB 1", 1, "Enable Verity", "verity 1: turn dm-verity back on", this::opVerityOn),
                 new Tile(Icons.ERASER, "ERASE", 2, "Erase Persist", "Wipe the persist partition (backup offered)", this::opErasePersist),
-                new Tile(Icons.KEY, "FRP", 2, "Remove FRP Lock", "Erase the frp partition so Factory Reset Protection is cleared", this::opEraseFrp),
+                new Tile(Icons.KEY, "FRP", 2, "Remove FRP Lock", "Erase the frp partition (optionally the FRP block in persist) so Factory Reset Protection is cleared", this::opEraseFrp),
                 new Tile(Icons.GRID, "REPART", 2, "Repartition", "Apply a partition-list XML you choose (erases all data)", this::opRepartition),
                 new Tile(Icons.UNLOCK, "UNLOCK BL", 2, "Bootloader Unlock", "Patch stock SPL + uboot and flash them (CVE-2022-38694, UMS9230)", this::opUnlock),
                 new Tile(Icons.WRENCH, "RECOVERY", 3, "Reboot Recovery", "Reboot the device into recovery", () -> opReboot(1)),
@@ -1125,14 +1126,33 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         final EditText typed = dialogField("Type FRP to confirm", "");
         typed.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
                 | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-        LinearLayout box = dialogBox(typed);
+        final CheckBox persist = new CheckBox(this);
+        persist.setText("Also erase persist (some devices store the FRP block there - destructive, see below)");
+        persist.setTextColor(Ui.TEXT);
+        LinearLayout box = dialogBox(typed, persist);
         final AlertDialog dlg = new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Remove FRP lock")
                 .setMessage("Runs: e frp\nThis erases the Factory Reset Protection partition (Google account lock data), "
                         + "letting you set the phone up with a different account after a factory reset.\n\n"
                         + "Only use this on a device you own. Not every Unisoc phone names the partition frp - if the erase "
-                        + "fails, check the Partition Table tile for the FRP partition's real name on your device.")
+                        + "fails, check the Partition Table tile for the FRP partition's real name on your device.\n\n"
+                        + "Testers reported devices where FRP still holds after 'e frp': those keep the persistent data block "
+                        + "in persist. Tick the option to erase it too - persist normally holds sensor, camera and "
+                        + "Wi-Fi/Bluetooth calibration, so the app backs persist up into Backup Files first (persist.bin), "
+                        + "but some features may still need re-calibration or misbehave afterwards. Use this only if plain "
+                        + "'e frp' did NOT clear FRP on the device.")
                 .setView(box).setNegativeButton("Cancel", null)
-                .setPositiveButton("Erase", (d, w) -> startSession(list("e", "frp"), rebootMode)).create();
+                .setPositiveButton("Erase", (d, w) -> {
+                    boolean withPersist = persist.isChecked();
+                    List<String> a = new ArrayList<>();
+                    if (withPersist) {
+                        a.add("path"); a.add(backupDir.getAbsolutePath());
+                        a.add("r"); a.add("persist");
+                        a.add("path"); a.add(workDir.getAbsolutePath());
+                    }
+                    a.add("e"); a.add("frp");
+                    if (withPersist) { a.add("e"); a.add("persist"); }
+                    startSession(a, rebootMode);
+                }).create();
         dlg.show();
         gateOnWord(dlg, typed, "FRP");
     }
@@ -1234,6 +1254,116 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                         "REPARTITION", () -> startSession(list("repartition", dest.getAbsolutePath()), rebootMode));
             });
         }, "import-xml").start();
+    }
+
+    // ------------------------------------------------------------------ .pac firmware flashing
+
+    private void opPac() {
+        confirm("Flash a .pac firmware?",
+                "Pick a ResearchDownload-style .pac package. The app splits it, uses every image and erase operation the "
+                        + "package's XML scheme names, and flashes them in scheme order - like the stock upgrade tool.\n"
+                        + "Loaders (FDL1/FDL2) come from your configured Device profile.\n\n"
+                        + "The phone is completely overwritten: boot, system, modem, NV partitions (IMEI storage), even splloader. "
+                        + "Back up IMEI & NV and persist first, and keep the cable connected the whole time.",
+                "Choose .pac", () -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                        .addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), REQ_PAC));
+    }
+
+    private void importPac(final Uri uri) {
+        status("Copying the package...");
+        final File dest = new File(workDir, "pac-flash.pac");
+        dest.delete();
+        new Thread(() -> {
+            try {
+                long size = querySize(uri);
+                if (size <= ENTRY_MIN || size > PAC_MAX) {
+                    main.post(() -> { status(""); toast("That is not a plausible firmware package"); });
+                    return;
+                }
+                copy(uri, dest, size);
+            } catch (IOException e) {
+                final String m = "Copy failed: " + e.getMessage();
+                main.post(() -> { status(""); toast(m); });
+                return;
+            }
+            final Pac.Plan plan;
+            try {
+                plan = Pac.parse(dest);
+            } catch (Exception e) {
+                dest.delete();
+                final String m = "Could not read the .pac: " + e.getMessage();
+                main.post(() -> { status(""); toast(m); });
+                return;
+            }
+            main.post(() -> { status(""); confirmPac(dest, plan); });
+        }, "import-pac").start();
+    }
+
+    private static final long ENTRY_MIN = 300 * 1024, PAC_MAX = 16L << 30;
+
+    private void confirmPac(final File pac, final Pac.Plan plan) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Product: ").append(plan.product);
+        sb.append("\nScheme: ").append(plan.xmlName);
+        sb.append("\nPackage: ").append(sizeText(pac.length()));
+        sb.append("\n\n");
+        int shown = 0;
+        for (Pac.Op o : plan.ops) {
+            if (shown++ < 60) {
+                sb.append(o.erase ? "ERASE  " : "WRITE  ").append(o.part);
+                if (!o.erase) sb.append("  <-  ").append(o.fileName).append("  (").append(o.sizeText()).append(')');
+                sb.append('\n');
+            }
+            if (o.erase || RISKY.contains(o.part.toLowerCase(Locale.US)))
+                sb.append("       ^ critical partition\n");
+        }
+        if (shown > 60) sb.append("... + ").append(shown - 60).append(" more entries\n");
+        for (String n : plan.notes) sb.append("NOTE   ").append(n).append('\n');
+        sb.append("\nWrites: ").append(plan.writes()).append("   Erases: ").append(plan.erases());
+        sb.append("\nLoaders: your configured pair (").append(chipLabel()).append(" / ").append(brandLabel()).append(')');
+        sb.append("\n\nThis flashes a FULL firmware - the phone is wiped and repartitioned data cannot be undone. "
+                + "Never unplug the cable while it runs.");
+        final int exit = rebootMode;
+        confirmTyped("Flash firmware from .pac", sb.toString(), "continue", () -> runPacFlash(pac, plan, exit));
+    }
+
+    private void runPacFlash(final File pac, final Pac.Plan plan, final int exit) {
+        final File outDir = new File(workDir, "pac");
+        deleteRecursive(outDir);
+        outDir.mkdirs();
+        status("Extracting package images...");
+        new Thread(() -> {
+            List<String> actions = new ArrayList<>();
+            try {
+                int i = 0, wIdx = 0;
+                for (Pac.Op o : plan.ops) {
+                    i++;
+                    if (o.erase) {
+                        log("Erase marked in scheme: " + o.part + "\n");
+                        actions.add("e");
+                        actions.add(o.part);
+                    } else {
+                        main.post(() -> status("Extracting " + o.fileName + " (" + i + "/" + plan.ops.size() + ")"));
+                        File img = new File(outDir, String.format(Locale.US, "%02d_%s.img", wIdx++, o.part));
+                        Pac.extract(pac, o, img);
+                        log("Extracted " + o.fileName + " -> " + img.getName() + " (" + sizeText(img.length()) + ")\n");
+                        actions.add("w");
+                        actions.add(o.part);
+                        actions.add(img.getAbsolutePath());
+                    }
+                }
+            } catch (IOException e) {
+                deleteRecursive(outDir);
+                final String m = "Extraction failed: " + e.getMessage();
+                main.post(() -> { status(""); toast(m); });
+                return;
+            }
+            pac.delete();
+            main.post(() -> {
+                status("");
+                startSession(actions, exit);
+            });
+        }, "pac-extract").start();
     }
 
     private void opCustom() {
@@ -1858,6 +1988,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             else if (req == REQ_UNLOCK_UBOOT) importUnlockFile(uri, false);
             else if (req == REQ_EXPORT) doExport(uri);
             else if (req == REQ_XML) importPartitionXml(uri);
+            else if (req == REQ_PAC) importPac(uri);
         }
     }
 
@@ -2229,7 +2360,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         return PART.matcher(base).matches() ? base : null;
     }
 
-    private static String sizeText(long b) {
+    static String sizeText(long b) {
         if (b >= 1L << 30) return String.format(Locale.US, "%.2f GB", b / (double) (1L << 30));
         if (b >= 1L << 20) return String.format(Locale.US, "%.1f MB", b / (double) (1L << 20));
         if (b >= 1L << 10) return String.format(Locale.US, "%.0f KB", b / (double) (1L << 10));
