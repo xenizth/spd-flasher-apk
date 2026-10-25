@@ -60,7 +60,8 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends Activity implements SpdRunner.Listener {
 
-    private static final int REQ_IMAGES = 1, REQ_FDL1 = 2, REQ_FDL2 = 3, REQ_EXPORT = 4, REQ_XML = 5, REQ_STORAGE = 6;
+    private static final int REQ_IMAGES = 1, REQ_FDL1 = 2, REQ_FDL2 = 3, REQ_EXPORT = 4, REQ_XML = 5, REQ_STORAGE = 6,
+            REQ_UNLOCK_SPL = 7, REQ_UNLOCK_UBOOT = 8;
     private static final int TAB_DEVICE = 0, TAB_OPS = 1, TAB_FILES = 2, TAB_CONSOLE = 3;
     private static final int SUB_INPUT = 0, SUB_BACKUP = 1, SUB_FDL = 2;
 
@@ -1319,10 +1320,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 + "3. A modified U-Boot (cboot) is flashed to uboot and booted once through the patched SPL; it writes the unlock state.\n"
                 + "4. The unlock state is checked (miscdata), then stock loaders go back and misc is wiped.\n"
                 + "Writing the patched SPL back keeps the signature bypass (that is what makes the unlock permanent).\n\n"
+                + "Optional: on the next screen you can import your own splloader and unlock U-Boot, if the automatic\n"
+                + "patch or the bundled universal cboot does not fit your device.\n\n"
                 + "Warnings: the phone will NOT boot normally until step 4 finishes; keep the cable and this screen handy. A wrong\n"
                 + "loader or partition can brick the phone. Back up persist and NV data first (Operations tab). Follow the prompts\n"
                 + "between the download-mode reconnections.";
-        confirmTyped("Unlock bootloader (UMS9230)", msg, "UNLOCK", this::unlockStageBackup);
+        confirmTyped("Unlock bootloader (UMS9230)", msg, "UNLOCK", this::unlockLoaders);
     }
 
     private void unlockFail(String step, final Runnable retry) {
@@ -1332,6 +1335,105 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                         + "You can retry this step, or stop here and re-run 'Bootloader unlock' later (any earlier dumps get overwritten).")
                 .setNegativeButton("Stop the unlock", null)
                 .setPositiveButton("Retry", (d, w) -> retry.run()).show();
+    }
+
+    // ------------------------------------------------------------------ unlock loaders (custom files)
+
+    private TextView unlockSplLabel, unlockUbLabel, unlockSplClear, unlockUbClear;
+
+    private File customSplFile() { return new File(workDir, "unlock-spl-custom.bin"); }
+
+    private File customUbFile() { return new File(workDir, "unlock-uboot-custom.bin"); }
+
+    private String loaderState(boolean spl) {
+        File f = spl ? customSplFile() : customUbFile();
+        return f.isFile() ? f.getName() + "  ·  " + sizeText(f.length()) + "  (your file)"
+                : "Automatic";
+    }
+
+    /** Lets the user bring their own splloader / unlock U-Boot, so the flow does not depend on the device dump or the bundled universal cboot. */
+    private void unlockLoaders() {
+        LinearLayout box = dialogBox(loaderRow("SPL loader", true), loaderRow("U-Boot for the unlock step", false));
+        box.addView(Ui.text(this, "SPL loader: what gets patched and booted. Import a DHTB splloader (e.g. dumped from another phone or "
+                + "updated firmware) - if it ships already patched, it is used as-is.\n"
+                + "U-Boot: replaces the bundled UMS9230 universal EMMC cboot in the flash step - useful for UFS storage or matching firmware.\n"
+                + "Leave both automatic to use the phone dump + bundled cboot.",
+                13, Ui.MUTED, false), Ui.fullLp(this, 4, 0));
+        AlertDialog dlg = new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Unlock loaders")
+                .setView(box)
+                .setNegativeButton("Stop the unlock", null)
+                .setPositiveButton("Start unlock", (d, w) -> unlockStageBackup()).create();
+        // clear the row-label references once the prompt is gone
+        dlg.setOnDismissListener(d -> {
+            unlockSplLabel = null; unlockUbLabel = null;
+            unlockSplClear = null; unlockUbClear = null;
+        });
+        dlg.show();
+    }
+
+    private LinearLayout loaderRow(String title, final boolean spl) {
+        LinearLayout row = Ui.hbox(this);
+        LinearLayout mid = Ui.vbox(this);
+        mid.addView(Ui.text(this, title, 15, Ui.TEXT, true));
+        TextView state = Ui.ellipsized(Ui.text(this, loaderState(spl), 13, Ui.ACCENT, false), 2);
+        if (spl) unlockSplLabel = state; else unlockUbLabel = state;
+        mid.addView(state);
+        row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        TextView imp = Ui.outlineButton(this, "Import", v -> {
+            haptic(v);
+            startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                    .addCategory(Intent.CATEGORY_OPENABLE)
+                    .setType("*/*"), spl ? REQ_UNLOCK_SPL : REQ_UNLOCK_UBOOT);
+        });
+        imp.setPadding(dp(16), dp(8), dp(16), dp(8));
+        imp.setTextSize(14);
+        row.addView(imp, Ui.wrapLp(this, 0, 0, 6, 0));
+        File f = spl ? customSplFile() : customUbFile();
+        TextView clr = Ui.text(this, "✕", 18, Ui.MUTED, false);
+        clr.setPadding(dp(8), dp(6), dp(4), dp(6));
+        clr.setClickable(true);
+        clr.setOnClickListener(v -> { f.delete(); refreshUnlockRows(); });
+        clr.setVisibility(f.isFile() ? View.VISIBLE : View.GONE);
+        if (spl) unlockSplClear = clr; else unlockUbClear = clr;
+        row.addView(clr);
+        return row;
+    }
+
+    private void refreshUnlockRows() {
+        if (unlockSplLabel != null) unlockSplLabel.setText(loaderState(true));
+        if (unlockUbLabel != null) unlockUbLabel.setText(loaderState(false));
+        if (unlockSplClear != null) unlockSplClear.setVisibility(customSplFile().isFile() ? View.VISIBLE : View.GONE);
+        if (unlockUbClear != null) unlockUbClear.setVisibility(customUbFile().isFile() ? View.VISIBLE : View.GONE);
+    }
+
+    private void importUnlockFile(final Uri uri, final boolean spl) {
+        final File dest = spl ? customSplFile() : customUbFile();
+        new Thread(() -> {
+            try {
+                long size = querySize(uri);
+                if (size <= 0 || size > 16 << 20) { main.post(() -> toast("That file does not look like a loader")); return; }
+                copy(uri, dest, size);
+                if (spl && !isDhtb(dest)) {
+                    main.post(() -> { dest.delete(); refreshUnlockRows(); toast("SPL loader must be sprd trusted firmware (DHTB header)"); });
+                    return;
+                }
+            } catch (IOException e) {
+                main.post(() -> toast("Import failed: " + e.getMessage()));
+                return;
+            }
+            main.post(() -> {
+                log("Imported " + (spl ? "custom SPL loader" : "custom unlock U-Boot") + ": " + dest.getName() + "\n");
+                refreshUnlockRows();
+            });
+        }, "import-unlock").start();
+    }
+
+    private static boolean isDhtb(File f) {
+        try (InputStream in = new FileInputStream(f)) {
+            return in.read() == 'D' && in.read() == 'H' && in.read() == 'T' && in.read() == 'B';
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private void unlockStageBackup() {
@@ -1350,15 +1452,19 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private void unlockPatch() {
         final File splDump = unlockDump("splloader.bin"), ubootDump = unlockDump("uboot.bin");
+        final File customSpl = customSplFile();
+        final boolean useCustomSpl = customSpl.isFile();
+        final File splSrc = useCustomSpl ? customSpl : splDump;
         final File splUnlock = unlockWork("spl-unlock.bin"), splSign = unlockWork("u-boot-spl-16k-sign.bin");
         final File ubootBak = unlockWork("uboot_bak.bin");
         status("Patching loaders...");
-        append("Patching the dumped loaders offline...\n");
+        append("Patching the loaders offline...\n" + (useCustomSpl ? "SPL source: custom file " + customSpl.getName() + "\n"
+                : "SPL source: splloader dump from the phone\n"));
         new Thread(() -> {
             final Unlocker.SplResult r;
             final String ubNote;
             try {
-                byte[] spl = readAll(splDump);
+                byte[] spl = readAll(splSrc);
                 Unlocker.SplResult res = Unlocker.genSplUnlock(spl);
                 if (res.patches == 0 && !res.alreadySized) res = Unlocker.genSplUnlockLegacy(spl);
                 r = res;
@@ -1374,11 +1480,16 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             main.post(() -> {
                 final int sites = r.patches;
                 append("splloader: patched to " + r.data.length + " bytes, " + sites + " signature site(s) NOP-ed"
-                        + (r.alreadySized ? " (image already real-sized - dumped SPL looks odd)" : "") + "\n"
+                        + (r.alreadySized ? " (image already real-sized - " + (useCustomSpl ? "imported file" : "dumped SPL")
+                        + " looks odd)" : "") + "\n"
                         + "uboot: trimmed to " + ubNote + " total for the restore copy\n");
                 if (r.alreadySized || sites == 0) {
-                    unlockFail("patch (no signature-check site found - wrong device firmware?)", this::unlockStageBackup);
-                    return;
+                    if (useCustomSpl) {
+                        append("Custom splloader has no patch sites - using it as-is, assuming it already ships patched.\n");
+                    } else {
+                        unlockFail("patch (no signature-check site found - wrong device firmware?)", this::unlockStageBackup);
+                        return;
+                    }
                 }
                 unlockStageErase();
             });
@@ -1397,10 +1508,22 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     private void unlockStageCboot() {
-        File cboot = unlockWork("fdl2-cboot.bin");
-        if (!prepareCboot(cboot)) return;
+        final File customUb = customUbFile();
+        final File cboot;
+        if (customUb.isFile()) {
+            cboot = customUb;
+            append("Custom unlock U-Boot: " + customUb.getName() + " (" + sizeText(customUb.length()) + ") - bundled cboot skipped\n");
+        } else {
+            cboot = unlockWork("fdl2-cboot.bin");
+            if (!prepareCboot(cboot)) return;
+        }
         new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Step 3/5 - flash modified U-Boot")
-                .setMessage("Writes the UMS9230 unlock U-Boot (fdl2-cboot, universal EMMC build) into the uboot partition, then reboots.\n\n"
+                .setMessage(customUb.isFile()
+                        ? "Writes YOUR U-Boot (" + customUb.getName() + ", " + sizeText(customUb.length())
+                        + ") into the uboot partition, then reboots.\n\n"
+                        + "This file is used exactly as provided - check it is an UMS9230 build for your storage type (EMMC/UFS) "
+                        + "and that 'size_part uboot' fits it.\n\nUnplug the phone and enter download mode again before continuing."
+                        : "Writes the UMS9230 unlock U-Boot (fdl2-cboot, universal EMMC build) into the uboot partition, then reboots.\n\n"
                         + "If your storage is UFS (not EMMC) this build may not fit - check 'size_part uboot' against "
                         + sizeText(cboot.length()) + " or stop.\n\nUnplug the phone and enter download mode again before continuing.")
                 .setNegativeButton("Stop the unlock", null)
@@ -1706,6 +1829,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             Uri uri = data.getData();
             if (req == REQ_FDL1) importFdl(uri, 1);
             else if (req == REQ_FDL2) importFdl(uri, 2);
+            else if (req == REQ_UNLOCK_SPL) importUnlockFile(uri, true);
+            else if (req == REQ_UNLOCK_UBOOT) importUnlockFile(uri, false);
             else if (req == REQ_EXPORT) doExport(uri);
             else if (req == REQ_XML) importPartitionXml(uri);
         }
