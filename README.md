@@ -43,6 +43,7 @@ What the buttons run (spd_dump syntax):
 | --- | --- |
 | Flash image | `w <partition> <file>` |
 | Erase persist | `[path <backups> r persist] e persist` |
+| Remove FRP | `e frp` |
 | Disable verity | `verity 0` (vbmeta flags byte = 1, hashtree only) |
 | Disable verity + verification | `wov vbmeta 0x78 0x03000000` (vbmeta flags = 3) |
 | Re-enable verity | `verity 1` |
@@ -81,6 +82,7 @@ Spd_dump_termux repo.
 
 
 ## New in this version
+- **FRP remove (new):** *Danger zone -> FRP* tile, types `e frp` after a typed-FRP confirmation to erase the Factory Reset Protection partition. If the device uses a different partition name, check *Partition Table* first.
 - **Connection Mode** (Device tab): *No Root* (Android USB permission) or *Root* (su opens the USB node itself; experimental, untested).
 - **Repartition** tile: pick a partition-list XML (`<Partition id="name" size="MB"/>`), it is validated like spd_dump does, then applied after a typed confirmation. Erases data.
 - **Backups** go to `/storage/emulated/0/SPD-FLASHER` (needs "All files access"; falls back to the app folder).

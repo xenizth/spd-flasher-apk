@@ -71,7 +71,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private static final Set<String> RISKY = new HashSet<>(Arrays.asList(
             "persist", "splloader", "uboot", "uboot_a", "uboot_b", "sml", "trustos", "teecfg",
             "fixnv1", "fixnv2", "runtimenv1", "runtimenv2", "prodnv", "nvitem", "miscdata", "misc",
-            "l_fixnv1", "l_fixnv2", "l_runtimenv1", "l_runtimenv2", "l_modem", "l_deltanv"));
+            "l_fixnv1", "l_fixnv2", "l_runtimenv1", "l_runtimenv2", "l_modem", "l_deltanv", "frp"));
     private static final String[] NV_PARTS = {
             "miscdata", "prodnv", "l_fixnv1", "l_fixnv2", "l_runtimenv1", "l_runtimenv2"};
     /** Android bootloader control block that makes recovery wipe userdata (shipped by the source repo). */
@@ -848,6 +848,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 new Tile("🛡️", "AVB 3", 1, "Disable Verification", "Turn off verity and verification in vbmeta", this::opVerityAll),
                 new Tile("🔒", "AVB 1", 1, "Enable Verity", "verity 1: turn dm-verity back on", this::opVerityOn),
                 new Tile("🧹", "ERASE", 2, "Erase Persist", "Wipe the persist partition (backup offered)", this::opErasePersist),
+                new Tile("🔑", "FRP", 2, "Remove FRP Lock", "Erase the frp partition so Factory Reset Protection is cleared", this::opEraseFrp),
                 new Tile("🧩", "REPART", 2, "Repartition", "Apply a partition-list XML you choose (erases all data)", this::opRepartition),
                 new Tile("🔓", "UNLOCK BL", 2, "Bootloader Unlock", "Patch stock SPL + uboot and flash them (CVE-2022-38694, UMS9230)", this::opUnlock),
                 new Tile("🛠️", "RECOVERY", 3, "Reboot Recovery", "Reboot the device into recovery", () -> opReboot(1)),
@@ -1111,6 +1112,22 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 }).create();
         dlg.show();
         gateOnWord(dlg, typed, "ERASE");
+    }
+
+    private void opEraseFrp() {
+        final EditText typed = dialogField("Type FRP to confirm", "");
+        typed.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
+                | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        LinearLayout box = dialogBox(typed);
+        final AlertDialog dlg = new AlertDialog.Builder(this, R.style.SpdDialog).setTitle("Remove FRP lock")
+                .setMessage("Runs: e frp\nThis erases the Factory Reset Protection partition (Google account lock data), "
+                        + "letting you set the phone up with a different account after a factory reset.\n\n"
+                        + "Only use this on a device you own. Not every Unisoc phone names the partition frp - if the erase "
+                        + "fails, check the Partition Table tile for the FRP partition's real name on your device.")
+                .setView(box).setNegativeButton("Cancel", null)
+                .setPositiveButton("Erase", (d, w) -> startSession(list("e", "frp"), rebootMode)).create();
+        dlg.show();
+        gateOnWord(dlg, typed, "FRP");
     }
 
     private void opReboot(final int mode) {
