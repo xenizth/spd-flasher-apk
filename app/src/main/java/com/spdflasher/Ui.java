@@ -183,7 +183,6 @@ final class Ui {
         w.setOnClickListener(l);
         if (icon != 0) w.addView(icon(c, icon, 14, selected ? TEXT : MUTED), wrapLp(c, 0, 0, 6, 0));
         TextView t = text(c, label, 13, selected ? TEXT : MUTED, selected);
-        TextView t = text(c, label, 15, selected ? TEXT : MUTED, selected);
         t.setSingleLine(true);
         w.addView(t);
         return w;
