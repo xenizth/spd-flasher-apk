@@ -2,11 +2,11 @@
 <resources>
     <style name="SpdDialog" parent="@android:style/Theme.Material.Dialog.Alert">
         <item name="android:windowBackground">@drawable/dialog_bg</item>
-        <item name="android:colorBackground">#FF090C15</item>
-        <item name="android:textColorPrimary">#FFE9F0FF</item>
-        <item name="android:textColorSecondary">#FF93A4C3</item>
-        <item name="android:colorAccent">#FF00E5FF</item>
-        <item name="android:colorControlActivated">#FF00E5FF</item>
+        <item name="android:colorBackground">#FF0C171E</item>
+        <item name="android:textColorPrimary">#FFE9F0F7</item>
+        <item name="android:textColorSecondary">#FF9CAFC5</item>
+        <item name="android:colorAccent">#FF64D8F0</item>
+        <item name="android:colorControlActivated">#FF64D8F0</item>
         <item name="android:windowMinWidthMajor">80%</item>
         <item name="android:windowMinWidthMinor">90%</item>
     </style>

@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -20,37 +19,44 @@ import android.widget.TextView;
 final class Ui {
     private Ui() {}
 
-    static int BG = 0xFF05060A;
-    static int CARD = 0xFF0E1322;
-    static int CARD_DARK = 0xFF090C15;
-    static int CHIP_SEL = 0xFF0F2A44;
-    static final int OUTLINE = 0xFF2E3A52;
-    static final int TEXT = 0xFFE9F0FF;
-    static final int MUTED = 0xFF93A4C3;
-    static int ACCENT = 0xFF00E5FF;
-    static int ON_ACCENT = 0xFF03141C;
-    static int BLUE_BANNER = 0xFF101A38;
+    // Material 3 dark colour roles: surface / container / primary, kept theme-dependent.
+    // BG       surface
+    // BG_MID   surfaceContainerLow
+    // CARD     surfaceContainerHigh
+    // CARD_DARK surfaceContainerLowest (inputs, rows, panels)
+    // CHIP_TOP secondaryContainer (selected chips, active pills)
+    // CHIP_BOT secondaryContainer low tone (kept for compat; equals CHIP_TOP)
+    static int BG = 0xFF0B141A;
+    static int CARD = 0xFF101E26;
+    static int CARD_DARK = 0xFF0C171E;
+    static int CHIP_SEL = 0xFF10374B;
+    static final int OUTLINE = 0xFF43566A;
+    static final int TEXT = 0xFFE9F0F7;
+    static final int MUTED = 0xFF9CAFC5;
+    static int ACCENT = 0xFF64D8F0;
+    static int ON_ACCENT = 0xFF00344A;
+    static int BLUE_BANNER = 0xFF14283A;
     static final int RED_BANNER = 0xFF3A101E;
-    static final int RED_TEXT = 0xFFFF9DB0;
-    static final int GREEN = 0xFF00FF9C;
-    static final int GREEN_BG = 0xFF0E3A26;
-    static final int RED = 0xFFFF3B5C;
+    static final int RED_TEXT = 0xFFFFB2C1;
+    static final int GREEN = 0xFF7DDBA8;
+    static final int GREEN_BG = 0xFF10362A;
+    static final int RED = 0xFFE6557A;
     static final int RED_BG = 0xFF3A101E;
-    static final int AMBER = 0xFFFFC857;
-    static final int AMBER_BG = 0xFF3A2A08;
-    static int ICON_BG = 0xFF0F2A44;
+    static final int AMBER = 0xFFF5C563;
+    static final int AMBER_BG = 0xFF382A15;
+    static int ICON_BG = 0xFF10374B;
 
     // theme-dependent extras (see applyTheme)
-    static int ACCENT2 = 0xFF7A5CFF, BG_MID = 0xFF0A0E1A, HERO = 0xFF14204A, CHIP_TOP = 0xFF0F2A44, CHIP_BOT = 0xFF0A1A30;
+    static int ACCENT2 = 0xFF9E8CFF, BG_MID = 0xFF0E1920, HERO = 0xFF122733, CHIP_TOP = 0xFF10374B, CHIP_BOT = 0xFF10374B;
 
     static final String[] THEME_NAMES = {"Neon", "Synthwave", "Toxic", "Inferno", "Frost"};
     //                          accent      accent2     bgTop       bgMid       hero        chipTop     chipBot     card        cardDark    onAccent
     private static final int[][] THEMES = {
-            {0xFF00E5FF, 0xFF7A5CFF, 0xFF05060A, 0xFF0A0E1A, 0xFF14204A, 0xFF0F2A44, 0xFF0A1A30, 0xFF0E1322, 0xFF090C15, 0xFF03141C},
-            {0xFFFF4FD8, 0xFF9D5CFF, 0xFF0A0510, 0xFF150A24, 0xFF3A1060, 0xFF3A1454, 0xFF240D38, 0xFF180F26, 0xFF100A1A, 0xFF2A0530},
-            {0xFF39FF88, 0xFFB8FF3D, 0xFF050A07, 0xFF0A1510, 0xFF0E3A24, 0xFF0F3A28, 0xFF0A2418, 0xFF0B1410, 0xFF070E0A, 0xFF03160B},
-            {0xFFFF5A3C, 0xFFFFB03A, 0xFF0A0505, 0xFF160A08, 0xFF4A1608, 0xFF3E1A10, 0xFF280F08, 0xFF170E0C, 0xFF0F0908, 0xFF2E0A00},
-            {0xFFB8E6FF, 0xFF7CC8FF, 0xFF070C12, 0xFF0C1420, 0xFF16324F, 0xFF1A3A55, 0xFF0F2438, 0xFF0D1520, 0xFF080E16, 0xFF0A1B2E},
+            {0xFF64D8F0, 0xFF9E8CFF, 0xFF0B141A, 0xFF0E1920, 0xFF122733, 0xFF10374B, 0xFF0D2C3D, 0xFF101E26, 0xFF0C171E, 0xFF00344A},
+            {0xFFF273E3, 0xFFB98FF8, 0xFF130C19, 0xFF171122, 0xFF251537, 0xFF3B1E42, 0xFF2C1634, 0xFF1B1425, 0xFF110C18, 0xFF41103B},
+            {0xFF7ADC96, 0xFFC3E86B, 0xFF0B1210, 0xFF0E1713, 0xFF122A1D, 0xFF14382A, 0xFF0F2C21, 0xFF122018, 0xFF0C1611, 0xFF00391E},
+            {0xFFFF8A5A, 0xFFF4C063, 0xFF130C0B, 0xFF171010, 0xFF2B130C, 0xFF442011, 0xFF33170D, 0xFF1E1614, 0xFF130D0C, 0xFF4A1704},
+            {0xFF9FD2F0, 0xFF8CB8E8, 0xFF0C1218, 0xFF0F161E, 0xFF15293B, 0xFF1C3B52, 0xFF162E42, 0xFF14202B, 0xFF0E1820, 0xFF0D344D},
     };
 
     /** Switches every theme colour. Call before the views are built (the activity recreates itself on change). */
@@ -58,8 +64,8 @@ final class Ui {
         int[] t = THEMES[Math.max(0, Math.min(THEMES.length - 1, i))];
         ACCENT = t[0]; ACCENT2 = t[1]; BG = t[2]; BG_MID = t[3]; HERO = t[4]; CHIP_TOP = t[5]; CHIP_BOT = t[6];
         CARD = t[7]; CARD_DARK = t[8]; ON_ACCENT = t[9];
-        CHIP_SEL = t[5]; ICON_BG = t[5];
-        BLUE_BANNER = mix(t[2], t[4], 0.35f);
+        CHIP_SEL = mix(t[5], 0xFFFFFFFF, 0.08f); ICON_BG = t[5];
+        BLUE_BANNER = mix(t[2], t[4], 0.5f);
     }
 
     static int dp(Context c, float v) {
@@ -73,19 +79,12 @@ final class Ui {
         return g;
     }
 
-    /** Neon panel: diagonal gradient + accent hairline + a soft outer glow ring. */
+    /** Tonal surface: soft vertical gradient inside a single large-radius container. Flat, like M3. */
     static Drawable panel(Context c, int top, int bottom, float radiusDp) {
         float r = dp(c, radiusDp);
-        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{top, bottom});
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{top, bottom});
         g.setCornerRadius(r);
-        g.setStroke(dp(c, 1), (ACCENT & 0x00FFFFFF) | 0x30000000);
-        GradientDrawable halo = new GradientDrawable();
-        halo.setCornerRadius(r + dp(c, 2));
-        halo.setStroke(dp(c, 3), (ACCENT & 0x00FFFFFF) | 0x26000000);
-        LayerDrawable l = new LayerDrawable(new Drawable[]{halo, g});
-        int inset = dp(c, 2);
-        l.setLayerInset(1, inset, inset, inset, inset);
-        return l;
+        return g;
     }
 
     static GradientDrawable outline(Context c, int fill, int stroke, float radiusDp) {
@@ -96,7 +95,7 @@ final class Ui {
 
     /** Wraps a background so taps show a ripple. */
     static Drawable ripple(Drawable bg) {
-        return new RippleDrawable(ColorStateList.valueOf(0x33FFFFFF), bg, null);
+        return new RippleDrawable(ColorStateList.valueOf(0x22FFFFFF), bg, null);
     }
 
     static LinearLayout.LayoutParams lp(Context c, int w, int h, float l, float t, float r, float b) {
@@ -135,9 +134,10 @@ final class Ui {
         return l;
     }
 
+    /** Card container on surfaceContainerHigh. */
     static LinearLayout card(Context c, int color) {
         LinearLayout l = vbox(c);
-        l.setBackground(panel(c, color, mix(color, 0xFF14161C, 0.35f), 26));
+        l.setBackground(panel(c, color, mix(color, 0xFF000000, 0.22f), 20));
         int p = dp(c, 16);
         l.setPadding(p, p, p, p);
         return l;
@@ -150,7 +150,7 @@ final class Ui {
         t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, sizeDp * 0.42f);
         t.setTextColor(fg);
         t.setGravity(Gravity.CENTER);
-        t.setBackground(panel(c, bg, mix(bg, 0xFF000000, 0.3f), sizeDp * 0.3f));
+        t.setBackground(round(c, bg, sizeDp * 0.28f));
         t.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
         return t;
     }
@@ -159,7 +159,7 @@ final class Ui {
         TextView t = text(c, label, 12, fg, true);
         t.setLetterSpacing(0.05f);
         t.setSingleLine(true);
-        t.setBackground(round(c, bg, 12));
+        t.setBackground(round(c, bg, 10));
         t.setPadding(dp(c, 12), dp(c, 6), dp(c, 12), dp(c, 6));
         return t;
     }
@@ -168,10 +168,8 @@ final class Ui {
         TextView t = text(c, label, 15, selected ? TEXT : MUTED, selected);
         t.setSingleLine(true);
         t.setGravity(Gravity.CENTER);
-        GradientDrawable on = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{CHIP_TOP, CHIP_BOT});
-        on.setCornerRadius(dp(c, 14));
-        on.setStroke(dp(c, 1), (ACCENT & 0x00FFFFFF) | 0xB4000000);
-        t.setBackground(ripple(selected ? on : outline(c, 0x00000000, (ACCENT & 0x00FFFFFF) | 0x55000000, 14)));
+        if (selected) t.setBackground(ripple(round(c, CHIP_TOP, 20)));
+        else t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 20)));
         t.setPadding(dp(c, 16), dp(c, 10), dp(c, 16), dp(c, 10));
         t.setClickable(true);
         t.setOnClickListener(l);
@@ -194,35 +192,27 @@ final class Ui {
     static TextView primaryButton(Context c, String label, View.OnClickListener l) {
         TextView t = text(c, label, 16, ON_ACCENT, true);
         t.setGravity(Gravity.CENTER);
-        GradientDrawable pg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{ACCENT, ACCENT2});
-        pg.setCornerRadius(dp(c, 26));
-        GradientDrawable halo = new GradientDrawable();
-        halo.setCornerRadius(dp(c, 28));
-        halo.setStroke(dp(c, 4), (ACCENT & 0x00FFFFFF) | 0x59000000);
-        LayerDrawable lg = new LayerDrawable(new Drawable[]{halo, pg});
-        int inset = dp(c, 2);
-        lg.setLayerInset(1, inset, inset, inset, inset);
-        t.setBackground(ripple(lg));
-        t.setPadding(dp(c, 20), dp(c, 14), dp(c, 20), dp(c, 14));
+        t.setBackground(ripple(round(c, ACCENT, 28)));
+        t.setPadding(dp(c, 24), dp(c, 14), dp(c, 24), dp(c, 14));
         t.setClickable(true);
         t.setOnClickListener(l);
         return t;
     }
 
     static TextView outlineButton(Context c, String label, View.OnClickListener l) {
-        TextView t = text(c, label, 16, ACCENT, true);
+        TextView t = text(c, label, 16, TEXT, true);
         t.setGravity(Gravity.CENTER);
-        t.setBackground(ripple(outline(c, 0x00000000, OUTLINE, 26)));
-        t.setPadding(dp(c, 20), dp(c, 14), dp(c, 20), dp(c, 14));
+        t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 28)));
+        t.setPadding(dp(c, 24), dp(c, 14), dp(c, 24), dp(c, 14));
         t.setClickable(true);
         t.setOnClickListener(l);
         return t;
     }
 
-    /** Colored info/warning strip with a leading glyph. */
+    /** Colored strip with a leading glyph. */
     static LinearLayout banner(Context c, String glyph, CharSequence msg, int bg, int fg) {
         LinearLayout l = hbox(c);
-        l.setBackground(round(c, bg, 20));
+        l.setBackground(round(c, bg, 16));
         l.setPadding(dp(c, 16), dp(c, 14), dp(c, 16), dp(c, 14));
         TextView g = text(c, glyph, 20, fg, true);
         l.addView(g, wrapLp(c, 0, 0, 14, 0));
@@ -297,24 +287,17 @@ final class Ui {
         return avail >= 700 ? 4 : avail >= 520 ? 3 : 2;
     }
 
-    /** Tile / card background: soft gradient tinted with an accent colour and a neon glow rim. */
+    /** Tile / card background: tonal container subtly tinted with the accent, like an M3 secondaryContainer. */
     static Drawable tinted(Context c, int accent, float radiusDp) {
-        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{mix(mix(CARD, 0xFFFFFFFF, 0.06f), accent, 0.16f), mix(CARD_DARK, 0xFF000000, 0.15f)});
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{mix(mix(CARD, 0xFFFFFFFF, 0.04f), accent, 0.14f), mix(CARD_DARK, accent, 0.05f)});
         g.setCornerRadius(dp(c, radiusDp));
-        g.setStroke(dp(c, 1), (accent & 0x00FFFFFF) | 0x66000000);
-        GradientDrawable halo = new GradientDrawable();
-        halo.setCornerRadius(dp(c, radiusDp) + dp(c, 2));
-        halo.setStroke(dp(c, 3), (accent & 0x00FFFFFF) | 0x33000000);
-        LayerDrawable l = new LayerDrawable(new Drawable[]{halo, g});
-        int inset = dp(c, 2);
-        l.setLayerInset(1, inset, inset, inset, inset);
-        return l;
+        return g;
     }
 
-    /** Small uppercase section label with a coloured dot. */
+    /** Small uppercase section label. */
     static TextView section(Context c, String label, int accent) {
-        TextView t = text(c, "●  " + label.toUpperCase(java.util.Locale.US), 12, accent, true);
+        TextView t = text(c, label.toUpperCase(java.util.Locale.US), 12, accent, true);
         t.setLetterSpacing(0.12f);
         return t;
     }

@@ -876,7 +876,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }
     }
 
-    private static final int[] SECTION_COLORS = {0xFF00E5FF, 0xFFFF4FD8, 0xFFFF5A3C, 0xFF39FF88, 0xFFFFC857};
+    private static final int[] SECTION_COLORS = {0xFF5CCFE8, 0xFFE58FE0, 0xFFFF8A5A, 0xFF7ADC96, 0xFFF2CE7B};
 
     private static final class Tile {
         final String glyph, tag, title, desc;
@@ -1778,7 +1778,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout row = Ui.hbox(this);
         row.setBackground(Ui.round(this, Ui.CARD_DARK, 20));
         row.setPadding(dp(14), dp(12), dp(14), dp(12));
-        row.addView(Ui.iconBox(this, "📄", 0xFFFDE8B8, 0xFFB86E00, 44), Ui.wrapLp(this, 0, 0, 14, 0));
+        row.addView(Ui.iconBox(this, "📄", Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
         LinearLayout mid = Ui.vbox(this);
         mid.addView(Ui.ellipsized(Ui.text(this, f.getName(), 17, Ui.TEXT, true), 1));
         mid.addView(Ui.text(this, new SimpleDateFormat("M/d/yyyy h:mm a", Locale.US).format(new Date(f.lastModified()))
@@ -1798,7 +1798,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         row.setPadding(dp(14), dp(12), dp(14), dp(12));
         row.setClickable(true);
         row.setOnClickListener(v -> tap.run());
-        row.addView(Ui.iconBox(this, "📂", 0xFFFDE8B8, 0xFFB86E00, 44), Ui.wrapLp(this, 0, 0, 14, 0));
+        row.addView(Ui.iconBox(this, "📂", Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
         LinearLayout mid = Ui.vbox(this);
         mid.addView(Ui.ellipsized(Ui.text(this, title, 17, Ui.TEXT, true), 1));
         mid.addView(Ui.ellipsized(Ui.text(this, (active ? "Active  ·  " : "") + sub, 13, Ui.MUTED, false), 1));
@@ -1942,7 +1942,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         logScroll = new ScrollView(this);
         logScroll.setBackground(Ui.panel(this, Ui.BG, Ui.BG_MID, 22));
-        logView = Ui.mono(this, "", 11.5f, 0xFF9DE8FF);
+        logView = Ui.mono(this, "", 11.5f, Ui.MUTED);
         logView.setPadding(dp(12), dp(10), dp(12), dp(10));
         logView.setTextIsSelectable(true);
         logScroll.addView(logView);
@@ -2162,11 +2162,11 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             String line = s.substring(start, end).toLowerCase(Locale.US);
             int color = 0;
             if (line.contains("error") || line.contains("fail") || line.contains("cannot") || line.contains("denied")
-                    || line.contains("not granted") || line.contains("did not come back")) color = 0xFFFF5C7A;
-            else if (line.contains("[reconnect]") || line.contains("warn") || line.contains("waiting")) color = 0xFFFFC857;
+                    || line.contains("not granted") || line.contains("did not come back")) color = 0xFFFF7A90;
+            else if (line.contains("[reconnect]") || line.contains("warn") || line.contains("waiting")) color = 0xFFF5C563;
             else if (line.contains("done") || line.contains("success") || line.contains("finished")
-                    || line.contains("exited with code 0]") || line.contains("reopened")) color = 0xFF39FF88;
-            else if (line.startsWith("$ ") || line.startsWith("> ")) color = 0xFF00E5FF;
+                    || line.contains("exited with code 0]") || line.contains("reopened")) color = 0xFF7DDBA8;
+            else if (line.startsWith("$ ") || line.startsWith("> ")) color = 0xFF64D8F0;
             if (color != 0 && end > start)
                 sb.setSpan(new android.text.style.ForegroundColorSpan(color), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             start = end + 1;
