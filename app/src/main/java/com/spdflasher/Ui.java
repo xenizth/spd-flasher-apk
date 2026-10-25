@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -19,37 +20,37 @@ import android.widget.TextView;
 final class Ui {
     private Ui() {}
 
-    static int BG = 0xFF1B1D24;
-    static int CARD = 0xFF2C303B;
-    static int CARD_DARK = 0xFF23262E;
-    static int CHIP_SEL = 0xFF3E4559;
-    static final int OUTLINE = 0xFF8E919A;
-    static final int TEXT = 0xFFE3E2E9;
-    static final int MUTED = 0xFFC4C6D0;
-    static int ACCENT = 0xFFAAC4FF;
-    static int ON_ACCENT = 0xFF0E2659;
-    static int BLUE_BANNER = 0xFF2A3A5E;
-    static final int RED_BANNER = 0xFF522B30;
-    static final int RED_TEXT = 0xFFFFB4AB;
-    static final int GREEN = 0xFF35C66B;
-    static final int GREEN_BG = 0xFF24493A;
-    static final int RED = 0xFFEF4444;
-    static final int RED_BG = 0xFF5A2D31;
-    static final int AMBER = 0xFFE8A33D;
-    static final int AMBER_BG = 0xFF4A3A24;
-    static int ICON_BG = 0xFF3E4559;
+    static int BG = 0xFF05060A;
+    static int CARD = 0xFF0E1322;
+    static int CARD_DARK = 0xFF090C15;
+    static int CHIP_SEL = 0xFF0F2A44;
+    static final int OUTLINE = 0xFF2E3A52;
+    static final int TEXT = 0xFFE9F0FF;
+    static final int MUTED = 0xFF93A4C3;
+    static int ACCENT = 0xFF00E5FF;
+    static int ON_ACCENT = 0xFF03141C;
+    static int BLUE_BANNER = 0xFF101A38;
+    static final int RED_BANNER = 0xFF3A101E;
+    static final int RED_TEXT = 0xFFFF9DB0;
+    static final int GREEN = 0xFF00FF9C;
+    static final int GREEN_BG = 0xFF0E3A26;
+    static final int RED = 0xFFFF3B5C;
+    static final int RED_BG = 0xFF3A101E;
+    static final int AMBER = 0xFFFFC857;
+    static final int AMBER_BG = 0xFF3A2A08;
+    static int ICON_BG = 0xFF0F2A44;
 
     // theme-dependent extras (see applyTheme)
-    static int ACCENT2 = 0xFF7C9CFF, BG_MID = 0xFF151A2B, HERO = 0xFF3F5FB8, CHIP_TOP = 0xFF4C5E94, CHIP_BOT = 0xFF35406A;
+    static int ACCENT2 = 0xFF7A5CFF, BG_MID = 0xFF0A0E1A, HERO = 0xFF14204A, CHIP_TOP = 0xFF0F2A44, CHIP_BOT = 0xFF0A1A30;
 
-    static final String[] THEME_NAMES = {"Midnight", "AMOLED", "Violet", "Emerald", "Sunset"};
+    static final String[] THEME_NAMES = {"Neon", "Synthwave", "Toxic", "Inferno", "Frost"};
     //                          accent      accent2     bgTop       bgMid       hero        chipTop     chipBot     card        cardDark    onAccent
     private static final int[][] THEMES = {
-            {0xFFAAC4FF, 0xFF7C9CFF, 0xFF0D1017, 0xFF151A2B, 0xFF3F5FB8, 0xFF4C5E94, 0xFF35406A, 0xFF2C303B, 0xFF23262E, 0xFF0E2659},
-            {0xFF7CF5C8, 0xFF3DDCA0, 0xFF000000, 0xFF080A10, 0xFF1F7A63, 0xFF1F5E4E, 0xFF133C32, 0xFF14171C, 0xFF0D0F13, 0xFF00382B},
-            {0xFFD0B8FF, 0xFFB08CFF, 0xFF100B1A, 0xFF1C1430, 0xFF6B45C8, 0xFF5A3F94, 0xFF3C2A66, 0xFF2B2438, 0xFF211B2D, 0xFF2D1560},
-            {0xFF8EE6A8, 0xFF5CD68A, 0xFF0B1410, 0xFF10201A, 0xFF2E8B57, 0xFF2F6E4D, 0xFF1F4A34, 0xFF222E28, 0xFF1A241F, 0xFF0A3A1E},
-            {0xFFFFB68A, 0xFFFF9466, 0xFF160F0D, 0xFF241613, 0xFFC4572B, 0xFF9A5A3C, 0xFF6A3A28, 0xFF332522, 0xFF281C1A, 0xFF5A1D00},
+            {0xFF00E5FF, 0xFF7A5CFF, 0xFF05060A, 0xFF0A0E1A, 0xFF14204A, 0xFF0F2A44, 0xFF0A1A30, 0xFF0E1322, 0xFF090C15, 0xFF03141C},
+            {0xFFFF4FD8, 0xFF9D5CFF, 0xFF0A0510, 0xFF150A24, 0xFF3A1060, 0xFF3A1454, 0xFF240D38, 0xFF180F26, 0xFF100A1A, 0xFF2A0530},
+            {0xFF39FF88, 0xFFB8FF3D, 0xFF050A07, 0xFF0A1510, 0xFF0E3A24, 0xFF0F3A28, 0xFF0A2418, 0xFF0B1410, 0xFF070E0A, 0xFF03160B},
+            {0xFFFF5A3C, 0xFFFFB03A, 0xFF0A0505, 0xFF160A08, 0xFF4A1608, 0xFF3E1A10, 0xFF280F08, 0xFF170E0C, 0xFF0F0908, 0xFF2E0A00},
+            {0xFFB8E6FF, 0xFF7CC8FF, 0xFF070C12, 0xFF0C1420, 0xFF16324F, 0xFF1A3A55, 0xFF0F2438, 0xFF0D1520, 0xFF080E16, 0xFF0A1B2E},
     };
 
     /** Switches every theme colour. Call before the views are built (the activity recreates itself on change). */
@@ -72,12 +73,19 @@ final class Ui {
         return g;
     }
 
-    /** Soft diagonal gradient with a hairline border: the look of cards and tiles. */
-    static GradientDrawable panel(Context c, int top, int bottom, float radiusDp) {
+    /** Neon panel: diagonal gradient + accent hairline + a soft outer glow ring. */
+    static Drawable panel(Context c, int top, int bottom, float radiusDp) {
+        float r = dp(c, radiusDp);
         GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{top, bottom});
-        g.setCornerRadius(dp(c, radiusDp));
-        g.setStroke(dp(c, 1), 0x22FFFFFF);
-        return g;
+        g.setCornerRadius(r);
+        g.setStroke(dp(c, 1), (ACCENT & 0x00FFFFFF) | 0x30000000);
+        GradientDrawable halo = new GradientDrawable();
+        halo.setCornerRadius(r + dp(c, 2));
+        halo.setStroke(dp(c, 3), (ACCENT & 0x00FFFFFF) | 0x26000000);
+        LayerDrawable l = new LayerDrawable(new Drawable[]{halo, g});
+        int inset = dp(c, 2);
+        l.setLayerInset(1, inset, inset, inset, inset);
+        return l;
     }
 
     static GradientDrawable outline(Context c, int fill, int stroke, float radiusDp) {
@@ -162,8 +170,8 @@ final class Ui {
         t.setGravity(Gravity.CENTER);
         GradientDrawable on = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{CHIP_TOP, CHIP_BOT});
         on.setCornerRadius(dp(c, 14));
-        on.setStroke(dp(c, 1), (ACCENT & 0x00FFFFFF) | 0x88000000);
-        t.setBackground(ripple(selected ? on : outline(c, 0x00000000, 0x66FFFFFF, 14)));
+        on.setStroke(dp(c, 1), (ACCENT & 0x00FFFFFF) | 0xB4000000);
+        t.setBackground(ripple(selected ? on : outline(c, 0x00000000, (ACCENT & 0x00FFFFFF) | 0x55000000, 14)));
         t.setPadding(dp(c, 16), dp(c, 10), dp(c, 16), dp(c, 10));
         t.setClickable(true);
         t.setOnClickListener(l);
@@ -188,7 +196,13 @@ final class Ui {
         t.setGravity(Gravity.CENTER);
         GradientDrawable pg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{ACCENT, ACCENT2});
         pg.setCornerRadius(dp(c, 26));
-        t.setBackground(ripple(pg));
+        GradientDrawable halo = new GradientDrawable();
+        halo.setCornerRadius(dp(c, 28));
+        halo.setStroke(dp(c, 4), (ACCENT & 0x00FFFFFF) | 0x59000000);
+        LayerDrawable lg = new LayerDrawable(new Drawable[]{halo, pg});
+        int inset = dp(c, 2);
+        lg.setLayerInset(1, inset, inset, inset, inset);
+        t.setBackground(ripple(lg));
         t.setPadding(dp(c, 20), dp(c, 14), dp(c, 20), dp(c, 14));
         t.setClickable(true);
         t.setOnClickListener(l);
@@ -283,13 +297,19 @@ final class Ui {
         return avail >= 700 ? 4 : avail >= 520 ? 3 : 2;
     }
 
-    /** Tile / card background: soft gradient tinted with an accent colour and a hairline accent border. */
-    static GradientDrawable tinted(Context c, int accent, float radiusDp) {
+    /** Tile / card background: soft gradient tinted with an accent colour and a neon glow rim. */
+    static Drawable tinted(Context c, int accent, float radiusDp) {
         GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{mix(mix(CARD, 0xFFFFFFFF, 0.06f), accent, 0.16f), mix(CARD_DARK, 0xFF000000, 0.15f)});
         g.setCornerRadius(dp(c, radiusDp));
-        g.setStroke(dp(c, 1), (accent & 0x00FFFFFF) | 0x44000000);
-        return g;
+        g.setStroke(dp(c, 1), (accent & 0x00FFFFFF) | 0x66000000);
+        GradientDrawable halo = new GradientDrawable();
+        halo.setCornerRadius(dp(c, radiusDp) + dp(c, 2));
+        halo.setStroke(dp(c, 3), (accent & 0x00FFFFFF) | 0x33000000);
+        LayerDrawable l = new LayerDrawable(new Drawable[]{halo, g});
+        int inset = dp(c, 2);
+        l.setLayerInset(1, inset, inset, inset, inset);
+        return l;
     }
 
     /** Small uppercase section label with a coloured dot. */

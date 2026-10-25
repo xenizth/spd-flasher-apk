@@ -1,0 +1,53 @@
+name: Apply update zip
+
+# No terminal needed: upload a file called update.zip to the repo (GitHub website ->
+# Add file -> Upload files). This workflow unpacks it over the project, deletes the zip,
+# commits, and starts the APK build. (Changes to .github/workflows are skipped on purpose:
+# GitHub does not let this workflow edit workflow files.)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'update.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: apply-update
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unpack update.zip over the project
+        run: |
+          if [ ! -f update.zip ]; then echo "No update.zip in the repo - nothing to do"; exit 0; fi
+          rm -rf "$RUNNER_TEMP/upd" && mkdir -p "$RUNNER_TEMP/upd"
+          unzip -q update.zip -d "$RUNNER_TEMP/upd"
+          SRC=$(dirname "$(find "$RUNNER_TEMP/upd" -maxdepth 3 -name settings.gradle | head -1)")
+          if [ ! -f "$SRC/settings.gradle" ]; then echo "settings.gradle not found in update.zip - wrong zip?"; exit 1; fi
+          echo "Project root inside the zip: $SRC"
+          rsync -a --exclude '.git' --exclude '.github' --exclude 'update.zip' "$SRC"/ ./
+          rm -f update.zip
+
+      - name: Commit the update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          VER=$(grep -o 'versionName "[^"]*"' app/build.gradle | head -1 | cut -d'"' -f2)
+          git commit -m "Update to v${VER} (applied from update.zip)"
+          git push
+
+      - name: Start the APK build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build-apk.yml --ref main

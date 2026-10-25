@@ -6,6 +6,11 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create, e.g. v2.0'
+        required: true
 
 permissions:
   contents: write
@@ -29,6 +34,7 @@ jobs:
 
       - name: Build APK (release-signed when the keystore secrets exist)
         env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -39,14 +45,15 @@ jobs:
             echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
             export KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
             ./gradlew --no-daemon assembleRelease
-            cp "app/build/outputs/apk/release/SPD Tool.apk" "SPD-Tool-${GITHUB_REF_NAME}.apk"
+            cp "app/build/outputs/apk/release/SPD Tool.apk" "SPD-Tool-${TAG}.apk"
           else
             echo "No keystore secrets found - building the debug-signed APK instead"
             ./gradlew --no-daemon assembleDebug
-            cp "app/build/outputs/apk/debug/SPD Tool.apk" "SPD-Tool-${GITHUB_REF_NAME}.apk"
+            cp "app/build/outputs/apk/debug/SPD Tool.apk" "SPD-Tool-${TAG}.apk"
           fi
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: SPD-Tool-${{ github.ref_name }}.apk
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: SPD-Tool-${{ github.event.inputs.tag || github.ref_name }}.apk

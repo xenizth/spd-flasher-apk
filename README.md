@@ -93,3 +93,9 @@ Spd_dump_termux repo.
 - `spd_dump` by TomKing062 and contributors; Termux `--usb-fd` variant from Seuj09/Spd_dump_termux.
 - libusb 1.0.27 (LGPL-2.1).
 - App by Xenizth.
+
+## Updating without a terminal
+- Upload a file named `update.zip` (the project zip) to the repo with GitHub's **Add file -> Upload files**.
+  The *Apply update zip* workflow unpacks it, commits, and starts the build.
+- To publish a release without tags: **Actions -> Release APK -> Run workflow**, type a tag such as `v2.1`.
+- Files under `.github/workflows` are not changed by update.zip (GitHub does not allow that); push those from a terminal.

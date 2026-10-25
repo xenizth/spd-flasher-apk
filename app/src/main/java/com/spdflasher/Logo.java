@@ -26,13 +26,13 @@ final class Logo extends Drawable {
 
         // tile
         p.setStyle(Paint.Style.FILL);
-        p.setShader(new LinearGradient(0, 0, 100, 100, 0xFF3C6EDC, 0xFF0B1330, Shader.TileMode.CLAMP));
+        p.setShader(new LinearGradient(0, 0, 100, 100, 0xFF0A0F22, 0xFF182551, Shader.TileMode.CLAMP));
         r.set(0, 0, 100, 100);
         c.drawRoundRect(r, 22, 22, p);
         p.setShader(null);
 
         // pins
-        p.setColor(0xFFEBF2FF);
+        p.setColor(0xFF8FE8FF);
         p.setStyle(Paint.Style.STROKE);
         p.setStrokeWidth(4f);
         p.setStrokeCap(Paint.Cap.ROUND);
@@ -51,7 +51,7 @@ final class Logo extends Drawable {
 
         // bolt
         p.setStyle(Paint.Style.FILL);
-        p.setColor(0xFF35C66B);
+        p.setShader(new LinearGradient(40, 30, 60, 70, 0xFF00E5FF, 0xFFFF4FD8, Shader.TileMode.CLAMP));
         bolt.reset();
         bolt.moveTo(56f, 33f);
         bolt.lineTo(39f, 54f);

@@ -873,7 +873,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }
     }
 
-    private static final int[] SECTION_COLORS = {0xFF8AB4FF, 0xFFC5A3FF, 0xFFFF8A80, 0xFF6FE0C5, 0xFFFFC857};
+    private static final int[] SECTION_COLORS = {0xFF00E5FF, 0xFFFF4FD8, 0xFFFF5A3C, 0xFF39FF88, 0xFFFFC857};
 
     private static final class Tile {
         final String glyph, tag, title, desc;
@@ -913,9 +913,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             l.animate().alpha(1f).translationY(0f).setStartDelay(Math.min(tileIndex++, 14) * 28L).setDuration(260).start();
         }
         LinearLayout top = Ui.hbox(this);
-        top.addView(Ui.iconBox(this, t.glyph, Ui.mix(0xFF1B1D24, accent, 0.24f), accent, 46));
+        top.addView(Ui.iconBox(this, t.glyph, Ui.mix(Ui.CARD, accent, 0.24f), accent, 46));
         top.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
-        top.addView(Ui.badge(this, t.tag, accent, Ui.mix(0xFF1B1D24, accent, 0.16f)));
+        top.addView(Ui.badge(this, t.tag, accent, Ui.mix(Ui.CARD, accent, 0.16f)));
         l.addView(top);
         l.addView(Ui.ellipsized(Ui.text(this, t.title, 17, Ui.TEXT, true), 1), Ui.fullLp(this, 12, 0));
         l.addView(Ui.ellipsized(Ui.mono(this, t.desc, 12, Ui.MUTED), 3), Ui.fullLp(this, 4, 0));
@@ -1526,8 +1526,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         box.addView(bar, Ui.fullLp(this, 0, 8));
 
         logScroll = new ScrollView(this);
-        logScroll.setBackground(Ui.panel(this, 0xFF0A0C11, 0xFF10131A, 22));
-        logView = Ui.mono(this, "", 11.5f, 0xFFC9D1D9);
+        logScroll.setBackground(Ui.panel(this, Ui.BG, Ui.BG_MID, 22));
+        logView = Ui.mono(this, "", 11.5f, 0xFF9DE8FF);
         logView.setPadding(dp(12), dp(10), dp(12), dp(10));
         logView.setTextIsSelectable(true);
         logScroll.addView(logView);
@@ -1725,11 +1725,11 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             String line = s.substring(start, end).toLowerCase(Locale.US);
             int color = 0;
             if (line.contains("error") || line.contains("fail") || line.contains("cannot") || line.contains("denied")
-                    || line.contains("not granted") || line.contains("did not come back")) color = 0xFFFF8A80;
+                    || line.contains("not granted") || line.contains("did not come back")) color = 0xFFFF5C7A;
             else if (line.contains("[reconnect]") || line.contains("warn") || line.contains("waiting")) color = 0xFFFFC857;
             else if (line.contains("done") || line.contains("success") || line.contains("finished")
-                    || line.contains("exited with code 0]") || line.contains("reopened")) color = 0xFF6FE0A0;
-            else if (line.startsWith("$ ") || line.startsWith("> ")) color = 0xFF8AB4FF;
+                    || line.contains("exited with code 0]") || line.contains("reopened")) color = 0xFF39FF88;
+            else if (line.startsWith("$ ") || line.startsWith("> ")) color = 0xFF00E5FF;
             if (color != 0 && end > start)
                 sb.setSpan(new android.text.style.ForegroundColorSpan(color), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             start = end + 1;
