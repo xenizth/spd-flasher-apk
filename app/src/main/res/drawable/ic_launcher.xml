@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Full app icon for API 24/25 (no adaptive icon support): rounded square + chip mark.
+     Same 108 grid as the adaptive foreground, bg drawn as a rounded square. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF0B141A"
+        android:pathData="M0,20.25 Q0,0 20.25,0 H87.75 Q108,0 108,20.25 V87.75 Q108,108 87.75,108 H20.25 Q0,108 0,87.75 Z"/>
+    <path
+        android:strokeColor="#FF64D8F0"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M43.5,28.5 V35 M54,28.5 V35 M64.5,28.5 V35 M43.5,73 V79.5 M54,73 V79.5 M64.5,73 V79.5 M28.5,43.5 H35 M28.5,54 H35 M28.5,64.5 H35 M73,43.5 H79.5 M73,54 H79.5 M73,64.5 H79.5 M45,37 H63 A8,8 0 0 1 71,45 V63 A8,8 0 0 1 63,71 H45 A8,8 0 0 1 37,63 V45 A8,8 0 0 1 45,37 Z"/>
+    <path
+        android:fillColor="#FF64D8F0"
+        android:pathData="M55,44 L45,56 L52,56 L51,64 L61,52 L54,52 Z"/>
+</vector>

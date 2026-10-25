@@ -134,8 +134,8 @@ final class Ui {
     /** Card container: flat surface on surfaceContainerHigh. */
     static LinearLayout card(Context c, int color) {
         LinearLayout l = vbox(c);
-        l.setBackground(round(c, color, 20));
-        int p = dp(c, 16);
+        l.setBackground(round(c, color, 16));
+        int p = dp(c, 12);
         l.setPadding(p, p, p, p);
         return l;
     }
@@ -147,27 +147,27 @@ final class Ui {
         t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, sizeDp * 0.42f);
         t.setTextColor(fg);
         t.setGravity(Gravity.CENTER);
-        t.setBackground(round(c, bg, sizeDp * 0.28f));
+        t.setBackground(round(c, bg, sizeDp * 0.32f));
         t.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
         return t;
     }
 
     static TextView badge(Context c, String label, int fg, int bg) {
-        TextView t = text(c, label, 12, fg, true);
+        TextView t = text(c, label, 11, fg, true);
         t.setLetterSpacing(0.05f);
         t.setSingleLine(true);
-        t.setBackground(round(c, bg, 10));
-        t.setPadding(dp(c, 12), dp(c, 6), dp(c, 12), dp(c, 6));
+        t.setBackground(round(c, bg, 8));
+        t.setPadding(dp(c, 10), dp(c, 5), dp(c, 10), dp(c, 5));
         return t;
     }
 
     static View chip(Context c, String label, boolean selected, View.OnClickListener l) {
-        TextView t = text(c, label, 15, selected ? TEXT : MUTED, selected);
+        TextView t = text(c, label, 13, selected ? TEXT : MUTED, selected);
         t.setSingleLine(true);
         t.setGravity(Gravity.CENTER);
-        if (selected) t.setBackground(ripple(round(c, CHIP_TOP, 20)));
-        else t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 20)));
-        t.setPadding(dp(c, 16), dp(c, 10), dp(c, 16), dp(c, 10));
+        if (selected) t.setBackground(ripple(round(c, CHIP_TOP, 18)));
+        else t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 18)));
+        t.setPadding(dp(c, 13), dp(c, 8), dp(c, 13), dp(c, 8));
         t.setClickable(true);
         t.setOnClickListener(l);
         return t;
@@ -176,12 +176,13 @@ final class Ui {
     /** Chip with an optional leading vector icon (used by the file tabs). */
     static LinearLayout chip(Context c, String label, int icon, boolean selected, View.OnClickListener l) {
         LinearLayout w = hbox(c);
-        w.setBackground(selected ? ripple(round(c, CHIP_TOP, 20))
-                : ripple(outline(c, Color.TRANSPARENT, OUTLINE, 20)));
-        w.setPadding(dp(c, 14), dp(c, 10), dp(c, 14), dp(c, 10));
+        w.setBackground(selected ? ripple(round(c, CHIP_TOP, 18))
+                : ripple(outline(c, Color.TRANSPARENT, OUTLINE, 18)));
+        w.setPadding(dp(c, 12), dp(c, 8), dp(c, 12), dp(c, 8));
         w.setClickable(true);
         w.setOnClickListener(l);
-        if (icon != 0) w.addView(icon(c, icon, 15, selected ? TEXT : MUTED), wrapLp(c, 0, 0, 7, 0));
+        if (icon != 0) w.addView(icon(c, icon, 14, selected ? TEXT : MUTED), wrapLp(c, 0, 0, 6, 0));
+        TextView t = text(c, label, 13, selected ? TEXT : MUTED, selected);
         TextView t = text(c, label, 15, selected ? TEXT : MUTED, selected);
         t.setSingleLine(true);
         w.addView(t);
@@ -202,20 +203,20 @@ final class Ui {
     }
 
     static TextView primaryButton(Context c, String label, View.OnClickListener l) {
-        TextView t = text(c, label, 16, ON_ACCENT, true);
+        TextView t = text(c, label, 14, ON_ACCENT, true);
         t.setGravity(Gravity.CENTER);
-        t.setBackground(ripple(round(c, ACCENT, 28)));
-        t.setPadding(dp(c, 24), dp(c, 14), dp(c, 24), dp(c, 14));
+        t.setBackground(ripple(round(c, ACCENT, 30)));
+        t.setPadding(dp(c, 20), dp(c, 11), dp(c, 20), dp(c, 11));
         t.setClickable(true);
         t.setOnClickListener(l);
         return t;
     }
 
     static TextView outlineButton(Context c, String label, View.OnClickListener l) {
-        TextView t = text(c, label, 16, TEXT, true);
+        TextView t = text(c, label, 14, TEXT, true);
         t.setGravity(Gravity.CENTER);
-        t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 28)));
-        t.setPadding(dp(c, 24), dp(c, 14), dp(c, 24), dp(c, 14));
+        t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 30)));
+        t.setPadding(dp(c, 20), dp(c, 11), dp(c, 20), dp(c, 11));
         t.setClickable(true);
         t.setOnClickListener(l);
         return t;
@@ -224,10 +225,10 @@ final class Ui {
     /** Colored strip with a leading vector icon. */
     static LinearLayout banner(Context c, int kind, CharSequence msg, int bg, int fg) {
         LinearLayout l = hbox(c);
-        l.setBackground(round(c, bg, 16));
-        l.setPadding(dp(c, 16), dp(c, 14), dp(c, 16), dp(c, 14));
-        if (kind != 0) l.addView(icon(c, kind, 20, fg), wrapLp(c, 0, 0, 14, 0));
-        TextView m = text(c, msg, 14, fg, false);
+        l.setBackground(round(c, bg, 14));
+        l.setPadding(dp(c, 13), dp(c, 10), dp(c, 13), dp(c, 10));
+        if (kind != 0) l.addView(icon(c, kind, 17, fg), wrapLp(c, 0, 0, 11, 0));
+        TextView m = text(c, msg, 13, fg, false);
         m.setLineSpacing(0, 1.2f);
         l.addView(m, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         return l;
@@ -257,7 +258,7 @@ final class Ui {
     }
 
     /** Widest the content column gets, so tablets and big screens do not stretch everything edge to edge. */
-    static final int MAX_CONTENT_DP = 760;
+    static final int MAX_CONTENT_DP = 640;
 
     /** Vertical box that never grows wider than {@link #MAX_CONTENT_DP}. */
     static class Capped extends LinearLayout {
@@ -294,8 +295,8 @@ final class Ui {
     /** Tile columns for the current window: 2 on phones, 3 on wide screens, 4 on very wide ones. */
     static int tileColumns(Context c) {
         float wdp = c.getResources().getConfiguration().screenWidthDp;
-        float avail = Math.min(wdp, MAX_CONTENT_DP) - 32;
-        return avail >= 700 ? 4 : avail >= 520 ? 3 : 2;
+        float avail = Math.min(wdp, MAX_CONTENT_DP) - 24;
+        return avail >= 620 ? 4 : avail >= 460 ? 3 : 2;
     }
 
     /** Tile / card background: flat container lightly tinted with the accent tile color. */
@@ -306,9 +307,9 @@ final class Ui {
     /** A tinted flat vector icon from {@link Icons} in its own view. */
     static android.view.View iconBox(Context c, int kind, int bg, int fg, int sizeDp) {
         android.widget.FrameLayout box = new android.widget.FrameLayout(c);
-        box.setBackground(round(c, bg, sizeDp * 0.28f));
+        box.setBackground(round(c, bg, sizeDp * 0.32f));
         box.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
-        box.addView(icon(c, kind, sizeDp * 0.55f, fg), new android.widget.FrameLayout.LayoutParams(
+        box.addView(icon(c, kind, sizeDp * 0.52f, fg), new android.widget.FrameLayout.LayoutParams(
                 dp(c, sizeDp), dp(c, sizeDp), Gravity.CENTER));
         return box;
     }
@@ -326,7 +327,7 @@ final class Ui {
 
     /** Small uppercase section label. */
     static TextView section(Context c, String label, int accent) {
-        TextView t = text(c, label.toUpperCase(java.util.Locale.US), 12, accent, true);
+        TextView t = text(c, label.toUpperCase(java.util.Locale.US), 11, accent, true);
         t.setLetterSpacing(0.12f);
         return t;
     }

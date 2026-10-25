@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Foreground mark of the launcher icon: flash chip (chip outline + filled bolt), matches Logo.java -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:strokeColor="#FF64D8F0"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M43.5,28.5 V35 M54,28.5 V35 M64.5,28.5 V35 M43.5,73 V79.5 M54,73 V79.5 M64.5,73 V79.5 M28.5,43.5 H35 M28.5,54 H35 M28.5,64.5 H35 M73,43.5 H79.5 M73,54 H79.5 M73,64.5 H79.5 M45,37 H63 A8,8 0 0 1 71,45 V63 A8,8 0 0 1 63,71 H45 A8,8 0 0 1 37,63 V45 A8,8 0 0 1 45,37 Z"/>
+    <path
+        android:fillColor="#FF64D8F0"
+        android:pathData="M55,44 L45,56 L52,56 L51,64 L61,52 L54,52 Z"/>
+</vector>

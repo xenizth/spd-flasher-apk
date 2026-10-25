@@ -4,63 +4,72 @@ import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Path;
-import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
 /**
- * The app logo: the Android robot head (bugdroid), drawn flat in code so it scales anywhere.
- * Green head, punched eyes, two antennas - no gradients. Heads sit on whatever surface is behind.
+ * The app logo: a memory chip with a lightning bolt, drawn flat in code so it scales anywhere.
+ * Chip outline with a filled flash bolt in the middle - no gradients, no bugdroid.
  */
 final class Logo extends Drawable {
-    /** Android brand green. */
-    static final int GREEN = 0xFF3DDC84;
+    /** Default accent colour (the Neon theme accent). */
+    static final int ACCENT = 0xFF64D8F0;
 
     private final int color;
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    Logo() { this(GREEN); }
+    Logo() { this(ACCENT); }
 
     Logo(int color) {
         this.color = color;
         fill.setColor(color);
+        fill.setStyle(Paint.Style.FILL);
         stroke.setColor(color);
         stroke.setStyle(Paint.Style.STROKE);
-        stroke.setStrokeWidth(6f);
+        stroke.setStrokeWidth(4f);
         stroke.setStrokeCap(Paint.Cap.ROUND);
+        stroke.setStrokeJoin(Paint.Join.ROUND);
     }
 
     @Override
     public void draw(Canvas c) {
         float w = getBounds().width(), h = getBounds().height();
-        float u = Math.min(w, h) / 100f;
+        float u = Math.min(w, h) / 108f;
         c.save();
-        c.translate(getBounds().left + (w - 100 * u) / 2f, getBounds().top + (h - 100 * u) / 2f);
+        c.translate(getBounds().left + (w - 108 * u) / 2f, getBounds().top + (h - 108 * u) / 2f);
         c.scale(u, u);
 
-        // head: dome + short slab, eyes punched out with even-odd fill (they show the surface behind)
-        c.drawPath(head(), fill);
+        // pins: three stubs on each side of the chip body
+        c.drawLine(43.5f, 28.5f, 43.5f, 35f, stroke);
+        c.drawLine(54, 28.5f, 54, 35f, stroke);
+        c.drawLine(64.5f, 28.5f, 64.5f, 35f, stroke);
+        c.drawLine(43.5f, 73f, 43.5f, 79.5f, stroke);
+        c.drawLine(54, 73f, 54, 79.5f, stroke);
+        c.drawLine(64.5f, 73f, 64.5f, 79.5f, stroke);
+        c.drawLine(28.5f, 43.5f, 35f, 43.5f, stroke);
+        c.drawLine(28.5f, 54, 35f, 54, stroke);
+        c.drawLine(28.5f, 64.5f, 35f, 64.5f, stroke);
+        c.drawLine(73f, 43.5f, 79.5f, 43.5f, stroke);
+        c.drawLine(73f, 54, 79.5f, 54, stroke);
+        c.drawLine(73f, 64.5f, 79.5f, 64.5f, stroke);
 
-        // antennas
-        c.drawLine(29f, 24f, 22f, 11.5f, stroke);
-        c.drawLine(71f, 24f, 78f, 11.5f, stroke);
+        // chip body: rounded square, stroked
+        c.drawRoundRect(37f, 37f, 71f, 71f, 8f, 8f, stroke);
+
+        // filled flash bolt in the middle (material flash path, scaled onto the 108 grid)
+        c.drawPath(bolt(), fill);
         c.restore();
     }
 
-    /** Bugdroid head in a 0..100 grid: dome from x 8..92, top y 18, flat bottom at y 70. */
-    private Path head() {
-        Path p = new Path();
-        p.setFillType(Path.FillType.EVEN_ODD);
-        p.moveTo(8, 60);
-        p.arcTo(new RectF(8, 18, 92, 102), 180, 180); // dome: (8,60) -> (50,18) -> (92,60)
-        p.lineTo(92, 64);
-        p.quadTo(92, 70, 86, 70);
-        p.lineTo(14, 70);
-        p.quadTo(8, 70, 8, 64);
+    private android.graphics.Path bolt() {
+        android.graphics.Path p = new android.graphics.Path();
+        p.moveTo(55, 44);
+        p.lineTo(45, 56);
+        p.lineTo(52, 56);
+        p.lineTo(51, 64);
+        p.lineTo(61, 52);
+        p.lineTo(54, 52);
         p.close();
-        p.addCircle(31, 45, 6.5f, Path.Direction.CW);
-        p.addCircle(69, 45, 6.5f, Path.Direction.CW);
         return p;
     }
 

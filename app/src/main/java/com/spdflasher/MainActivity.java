@@ -323,14 +323,14 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         // top bar
         LinearLayout bar = new Ui.CappedRow(this);
-        bar.setPadding(dp(8), dp(8), dp(8), dp(4));
+        bar.setPadding(dp(10), dp(6), dp(10), dp(4));
         bar.addView(barButton(Icons.INFO, v -> showAbout()));
         ImageView logo = new ImageView(this);
         logo.setImageDrawable(new Logo());
-        bar.addView(logo, Ui.lp(this, dp(34), dp(34), 0, 0, 10, 0));
+        bar.addView(logo, Ui.lp(this, dp(26), dp(26), 0, 0, 10, 0));
         LinearLayout titleBox = Ui.vbox(this);
-        titleBox.addView(Ui.text(this, "SPD Tool", 22, Ui.TEXT, true));
-        titleBox.addView(Ui.text(this, "by Xenizth", 12, Ui.ACCENT, false));
+        titleBox.addView(Ui.text(this, "SPD Tool", 18, Ui.TEXT, true));
+        titleBox.addView(Ui.text(this, "by Xenizth", 11, Ui.ACCENT, false));
         bar.addView(titleBox, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         bar.addView(barButton(Icons.REFRESH, v -> onRefresh()));
         bar.addView(barButton(Icons.SETTINGS, v -> showSettings()));
@@ -344,8 +344,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         progress.setVisibility(View.GONE);
         root.addView(progress, Ui.lp(this, ViewGroup.LayoutParams.MATCH_PARENT, dp(3), 16, 0, 16, 4));
 
-        statusLine = Ui.text(this, "", 13, Ui.ACCENT, true);
-        statusLine.setPadding(dp(20), 0, dp(20), dp(4));
+        statusLine = Ui.text(this, "", 12, Ui.ACCENT, true);
+        statusLine.setPadding(dp(14), 0, dp(14), dp(3));
         statusLine.setVisibility(View.GONE);
         root.addView(statusLine);
 
@@ -362,8 +362,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         // bottom navigation: floating rounded bar, selected tab gets a pill
         LinearLayout nav = new Ui.CappedRow(this);
         nav.setBackground(Ui.panel(this, Ui.CARD, 30));
-        nav.setPadding(dp(6), dp(8), dp(6), dp(8));
-        nav.setElevation(dp(10));
+        nav.setPadding(dp(6), dp(6), dp(6), dp(6));
+        nav.setElevation(dp(8));
         int[] glyphs = {Icons.PHONE, Icons.CHIP, Icons.FOLDER, Icons.TERMINAL};
         String[] labels = {"Device", "Operations", "Files", "Console"};
         for (int i = 0; i < 4; i++) {
@@ -372,11 +372,11 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             item.setGravity(Gravity.CENTER);
             item.setClickable(true);
             item.setOnClickListener(v -> selectTab(idx));
-            View pill = Ui.icon(this, glyphs[i], 22, Ui.TEXT);
-            pill.setLayoutParams(new LinearLayout.LayoutParams(dp(60), dp(34)));
+            View pill = Ui.icon(this, glyphs[i], 20, Ui.TEXT);
+            pill.setLayoutParams(new LinearLayout.LayoutParams(dp(52), dp(30)));
             navPills[i] = pill;
             item.addView(pill);
-            TextView lab = Ui.text(this, labels[i], 12, Ui.MUTED, false);
+            TextView lab = Ui.text(this, labels[i], 11, Ui.MUTED, false);
             lab.setGravity(Gravity.CENTER);
             lab.setSingleLine(true);
             lab.setPadding(0, dp(3), 0, 0);
@@ -391,10 +391,10 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     private View barButton(int kind, View.OnClickListener l) {
-        View v = Ui.icon(this, kind, 22, Ui.ACCENT);
+        View v = Ui.icon(this, kind, 20, Ui.ACCENT);
         v.setClickable(true);
         v.setOnClickListener(l);
-        v.setLayoutParams(new LinearLayout.LayoutParams(dp(48), dp(48)));
+        v.setLayoutParams(new LinearLayout.LayoutParams(dp(40), dp(40)));
         return v;
     }
 
@@ -402,7 +402,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         ScrollView sv = new ScrollView(this);
         sv.setVerticalScrollBarEnabled(false);
         LinearLayout box = new Ui.Capped(this);
-        box.setPadding(dp(16), dp(8), dp(16), dp(24));
+        box.setPadding(dp(12), dp(6), dp(12), dp(18));
         sv.setFillViewport(true);
         sv.addView(box, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
@@ -417,7 +417,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         for (int i = 0; i < 4; i++) {
             tabViews[i].setVisibility(i == tab ? View.VISIBLE : View.GONE);
             boolean sel = i == tab;
-            navPills[i].setBackground(sel ? Ui.panel(this, Ui.CHIP_TOP, 17) : null);
+            navPills[i].setBackground(sel ? Ui.panel(this, Ui.CHIP_TOP, 15) : null);
             navPills[i].setAlpha(sel ? 1f : 0.6f);
             navLabels[i].setTextColor(sel ? Ui.ACCENT : Ui.MUTED);
             navLabels[i].setTypeface(sel ? android.graphics.Typeface.DEFAULT_BOLD : android.graphics.Typeface.DEFAULT);
@@ -477,14 +477,14 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout hero = Ui.hbox(this);
         hero.setGravity(Gravity.CENTER_VERTICAL);
         hero.setBackground(Ui.panel(this, Ui.HERO, 30));
-        hero.setPadding(dp(18), dp(18), dp(18), dp(18));
+        hero.setPadding(dp(14), dp(14), dp(14), dp(14));
         ImageView hl = new ImageView(this);
         hl.setImageDrawable(new Logo());
-        hero.addView(hl, Ui.lp(this, dp(60), dp(60), 0, 0, 16, 0));
+        hero.addView(hl, Ui.lp(this, dp(42), dp(42), 0, 0, 12, 0));
         LinearLayout ht = Ui.vbox(this);
-        ht.addView(Ui.text(this, "SPD Tool", 24, Ui.TEXT, true));
-        ht.addView(Ui.text(this, "by Xenizth", 13, Ui.ACCENT, true));
-        ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  Root / No Root", 13, Ui.MUTED, false), Ui.fullLp(this, 2, 0));
+        ht.addView(Ui.text(this, "SPD Tool", 20, Ui.TEXT, true));
+        ht.addView(Ui.text(this, "by Xenizth", 12, Ui.ACCENT, true));
+        ht.addView(Ui.text(this, "Unisoc / Spreadtrum toolkit  ·  Root / No Root", 12, Ui.MUTED, false), Ui.fullLp(this, 2, 0));
         LinearLayout pills = Ui.hbox(this);
         boolean linked = !unisocDevices().isEmpty();
         TextView linkBadge = Ui.badge(this, linked ? "CONNECTED" : "NO DEVICE", linked ? Ui.GREEN : Ui.RED_TEXT,
@@ -509,8 +509,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout head = Ui.hbox(this);
         boolean on = !devs.isEmpty();
         head.addView(Ui.iconBox(this, on ? Icons.PLUG : Icons.WARNING, on ? Ui.GREEN_BG : Ui.RED_BG,
-                on ? Ui.GREEN : Ui.RED_TEXT, 48), Ui.wrapLp(this, 0, 0, 14, 0));
-        head.addView(Ui.text(this, on ? "Unisoc Device Connected" : "No Device Connected", 20, Ui.TEXT, true),
+                on ? Ui.GREEN : Ui.RED_TEXT, 40), Ui.wrapLp(this, 0, 0, 12, 0));
+        head.addView(Ui.text(this, on ? "Unisoc Device Connected" : "No Device Connected", 17, Ui.TEXT, true),
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         String idText = on ? String.format(Locale.US, "%04x:%04x", devs.get(0).getVendorId(),
                 devs.get(0).getProductId()) : "NONE";
@@ -519,7 +519,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         String msg = on
                 ? "Download-mode device detected on USB. Tap an operation and the app will connect."
                 : "Nothing connected yet. Pick an operation first, then plug the phone in (OTG) while holding its download-mode key.";
-        TextView m = Ui.text(this, msg, 15, Ui.MUTED, false);
+        TextView m = Ui.text(this, msg, 13, Ui.MUTED, false);
         m.setLineSpacing(0, 1.15f);
         c1.addView(m, Ui.fullLp(this, 12, 0));
         deviceBox.addView(c1, Ui.fullLp(this, 8, 8));
@@ -562,9 +562,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout h3 = Ui.hbox(this);
         h3.addView(cardHeader(Icons.PHONE, "Device Hardware Profile"),
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView auto = Ui.text(this, "Auto-Detect", 14, Ui.TEXT, true);
+        TextView auto = Ui.text(this, "Auto-Detect", 13, Ui.TEXT, true);
         auto.setBackground(Ui.ripple(Ui.round(this, Ui.CHIP_SEL, 14)));
-        auto.setPadding(dp(14), dp(8), dp(14), dp(8));
+        auto.setPadding(dp(12), dp(7), dp(12), dp(7));
         auto.setClickable(true);
         auto.setOnClickListener(v -> autoDetect());
         h3.addView(auto);
@@ -582,7 +582,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                     Ui.fullLp(this, 12, 0));
         }
 
-        c3.addView(Ui.text(this, "Chipset Model", 16, Ui.MUTED, true), Ui.fullLp(this, 16, 8));
+        c3.addView(Ui.text(this, "Chipset Model", 14, Ui.MUTED, true), Ui.fullLp(this, 12, 6));
         HorizontalScrollView chips = Ui.chipRow(this);
         for (Profiles.Chip chip : Profiles.CHIPS) {
             final Profiles.Chip cc = chip;
@@ -590,10 +590,10 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }
         c3.addView(chips);
 
-        c3.addView(Ui.text(this, "Manufacturer / Brand", 16, Ui.MUTED, true), Ui.fullLp(this, 16, 8));
+        c3.addView(Ui.text(this, "Manufacturer / Brand", 14, Ui.MUTED, true), Ui.fullLp(this, 12, 6));
         Profiles.Chip cur = chipId == null ? null : Profiles.find(chipId);
         if (cur == null) {
-            c3.addView(Ui.text(this, "Select a chipset first.", 14, Ui.MUTED, false));
+            c3.addView(Ui.text(this, "Select a chipset first.", 13, Ui.MUTED, false));
         } else {
             HorizontalScrollView brands = Ui.chipRow(this);
             for (String b : cur.brands) {
@@ -602,7 +602,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             }
             c3.addView(brands);
 
-            c3.addView(Ui.text(this, "Load addresses", 16, Ui.MUTED, true), Ui.fullLp(this, 16, 4));
+            c3.addView(Ui.text(this, "Load addresses", 14, Ui.MUTED, true), Ui.fullLp(this, 12, 4));
             c3.addView(Ui.text(this, "Defaults for the chosen chipset. Change them only if your loader documents other values.",
                     13, Ui.MUTED, false), Ui.fullLp(this, 0, 4));
             c3.addView(addrField("FDL1 address", "fdl1"), Ui.fullLp(this, 6, 0));
@@ -638,8 +638,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private LinearLayout cardHeader(int kind, String label) {
         LinearLayout h = Ui.hbox(this);
-        h.addView(Ui.icon(this, kind, 18, Ui.ACCENT), Ui.wrapLp(this, 0, 2, 9, 0));
-        h.addView(Ui.text(this, label, 17, Ui.ACCENT, true));
+        h.addView(Ui.icon(this, kind, 16, Ui.ACCENT), Ui.wrapLp(this, 0, 2, 8, 0));
+        h.addView(Ui.text(this, label, 15, Ui.ACCENT, true));
         return h;
     }
 
@@ -652,17 +652,17 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private View miniStatus(int kind, String name, String sub, boolean ready) {
         LinearLayout l = Ui.card(this, Ui.CARD_DARK);
-        l.setBackground(Ui.round(this, Ui.CARD_DARK, 20));
-        l.setPadding(dp(14), dp(14), dp(14), dp(14));
+        l.setBackground(Ui.round(this, Ui.CARD_DARK, 16));
+        l.setPadding(dp(11), dp(11), dp(11), dp(11));
         LinearLayout top = Ui.hbox(this);
-        top.addView(Ui.iconBox(this, kind, ready ? Ui.GREEN_BG : Ui.RED_BG, ready ? Ui.GREEN : Ui.RED_TEXT, 40));
+        top.addView(Ui.iconBox(this, kind, ready ? Ui.GREEN_BG : Ui.RED_BG, ready ? Ui.GREEN : Ui.RED_TEXT, 34));
         View sp = new View(this);
         top.addView(sp, new LinearLayout.LayoutParams(0, 1, 1f));
         top.addView(Ui.badge(this, ready ? "READY" : "MISSING", ready ? Ui.GREEN : Ui.RED_TEXT,
                 ready ? Ui.GREEN_BG : Ui.RED_BG));
         l.addView(top);
-        l.addView(Ui.text(this, name, 17, Ui.TEXT, true), Ui.fullLp(this, 10, 0));
-        TextView s = Ui.text(this, sub, 13, Ui.MUTED, false);
+        l.addView(Ui.text(this, name, 14, Ui.TEXT, true), Ui.fullLp(this, 8, 0));
+        TextView s = Ui.text(this, sub, 12, Ui.MUTED, false);
         l.addView(Ui.ellipsized(s, 1), Ui.fullLp(this, 2, 0));
         return l;
     }
@@ -674,10 +674,10 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         e.setSingleLine(true);
         e.setTextColor(Ui.TEXT);
         e.setHintTextColor(Ui.MUTED);
-        e.setTextSize(15);
+        e.setTextSize(14);
         e.setTypeface(android.graphics.Typeface.MONOSPACE);
         e.setBackground(Ui.round(this, Ui.CARD_DARK, 14));
-        e.setPadding(dp(14), dp(12), dp(14), dp(12));
+        e.setPadding(dp(12), dp(10), dp(12), dp(10));
         e.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         e.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
@@ -806,8 +806,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private void renderOps() {
         if (opsBox == null) return;
         opsBox.removeAllViews();
-        opsBox.addView(Ui.text(this, "Operations", 26, Ui.TEXT, true), Ui.fullLp(this, 8, 0));
-        opsBox.addView(Ui.text(this, "Tap an operation to run it. Plug the phone in after you tap.", 15, Ui.MUTED, false),
+        opsBox.addView(Ui.text(this, "Operations", 20, Ui.TEXT, true), Ui.fullLp(this, 6, 0));
+        opsBox.addView(Ui.text(this, "Tap an operation to run it. Plug the phone in after you tap.", 13, Ui.MUTED, false),
                 Ui.fullLp(this, 4, 12));
 
         String problem = profileProblem();
@@ -816,7 +816,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }
 
         LinearLayout opts = Ui.card(this, Ui.CARD);
-        opts.addView(Ui.text(this, "Hex Mode (exec_addr)", 16, Ui.TEXT, true));
+        opts.addView(Ui.text(this, "Hex Mode (exec_addr)", 14, Ui.TEXT, true));
         HorizontalScrollView hex = Ui.chipRow(this);
         for (int i = 0; i < HEX_LABELS.length; i++) {
             final int idx = i;
@@ -826,7 +826,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         View div = new View(this);
         div.setBackgroundColor(0x33FFFFFF);
         opts.addView(div, Ui.lp(this, ViewGroup.LayoutParams.MATCH_PARENT, 1, 0, 14, 0, 14));
-        opts.addView(Ui.text(this, "Reboot Mode After Execution", 16, Ui.TEXT, true));
+        opts.addView(Ui.text(this, "Reboot Mode After Execution", 14, Ui.TEXT, true));
         HorizontalScrollView rb = Ui.chipRow(this);
         for (int i = 0; i < REBOOT_LABELS.length; i++) {
             final int idx = i;
@@ -904,7 +904,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         final int accent = SECTION_COLORS[t.kind];
         LinearLayout l = Ui.vbox(this);
         l.setBackground(Ui.ripple(Ui.tinted(this, accent, 26)));
-        l.setPadding(dp(16), dp(16), dp(16), dp(16));
+        l.setPadding(dp(12), dp(12), dp(12), dp(12));
         l.setClickable(true);
         l.setOnClickListener(v -> { haptic(v); if (ready()) t.action.run(); });
         l.setOnTouchListener((v, ev) -> {
@@ -922,13 +922,13 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         }
         LinearLayout top = Ui.hbox(this);
         top.addView(t.icon != 0
-                ? Ui.iconBox(this, t.icon, Ui.mix(Ui.CARD, accent, 0.24f), accent, 46)
-                : Ui.iconBox(this, t.glyph, Ui.mix(Ui.CARD, accent, 0.24f), accent, 46));
+                ? Ui.iconBox(this, t.icon, Ui.mix(Ui.CARD, accent, 0.24f), accent, 40)
+                : Ui.iconBox(this, t.glyph, Ui.mix(Ui.CARD, accent, 0.24f), accent, 40));
         top.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
         top.addView(Ui.badge(this, t.tag, accent, Ui.mix(Ui.CARD, accent, 0.16f)));
         l.addView(top);
-        l.addView(Ui.ellipsized(Ui.text(this, t.title, 17, Ui.TEXT, true), 1), Ui.fullLp(this, 12, 0));
-        l.addView(Ui.ellipsized(Ui.mono(this, t.desc, 12, Ui.MUTED), 3), Ui.fullLp(this, 4, 0));
+        l.addView(Ui.ellipsized(Ui.text(this, t.title, 15, Ui.TEXT, true), 1), Ui.fullLp(this, 10, 0));
+        l.addView(Ui.ellipsized(Ui.mono(this, t.desc, 11, Ui.MUTED), 3), Ui.fullLp(this, 3, 0));
         return l;
     }
 
@@ -1399,8 +1399,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private LinearLayout loaderRow(String title, final boolean spl) {
         LinearLayout row = Ui.hbox(this);
         LinearLayout mid = Ui.vbox(this);
-        mid.addView(Ui.text(this, title, 15, Ui.TEXT, true));
-        TextView state = Ui.ellipsized(Ui.text(this, loaderState(spl), 13, Ui.ACCENT, false), 2);
+        mid.addView(Ui.text(this, title, 14, Ui.TEXT, true));
+        TextView state = Ui.ellipsized(Ui.text(this, loaderState(spl), 12, Ui.ACCENT, false), 2);
         if (spl) unlockSplLabel = state; else unlockUbLabel = state;
         mid.addView(state);
         row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -1410,7 +1410,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                     .addCategory(Intent.CATEGORY_OPENABLE)
                     .setType("*/*"), spl ? REQ_UNLOCK_SPL : REQ_UNLOCK_UBOOT);
         });
-        imp.setPadding(dp(16), dp(8), dp(16), dp(8));
+        imp.setPadding(dp(14), dp(7), dp(14), dp(7));
         imp.setTextSize(14);
         row.addView(imp, Ui.wrapLp(this, 0, 0, 6, 0));
         File f = spl ? customSplFile() : customUbFile();
@@ -1769,13 +1769,13 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private void emptyState(int kind, String title, String body) {
         LinearLayout c = Ui.card(this, Ui.CARD_DARK);
         c.setGravity(Gravity.CENTER_HORIZONTAL);
-        c.setPadding(dp(20), dp(32), dp(20), dp(32));
-        View icon = Ui.iconBox(this, kind, Ui.CARD, Ui.MUTED, 72);
+        c.setPadding(dp(16), dp(24), dp(16), dp(24));
+        View icon = Ui.iconBox(this, kind, Ui.CARD, Ui.MUTED, 56);
         c.addView(icon);
-        TextView t = Ui.text(this, title, 22, Ui.TEXT, true);
+        TextView t = Ui.text(this, title, 18, Ui.TEXT, true);
         t.setGravity(Gravity.CENTER);
-        c.addView(t, Ui.fullLp(this, 16, 0));
-        TextView b = Ui.text(this, body, 15, Ui.MUTED, false);
+        c.addView(t, Ui.fullLp(this, 14, 0));
+        TextView b = Ui.text(this, body, 13, Ui.MUTED, false);
         b.setGravity(Gravity.CENTER);
         b.setLineSpacing(0, 1.2f);
         c.addView(b, Ui.fullLp(this, 8, 0));
@@ -1784,21 +1784,21 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private View fileRow(final File f, boolean dir, Runnable tap) {
         LinearLayout row = Ui.hbox(this);
-        row.setBackground(Ui.round(this, Ui.CARD_DARK, 20));
-        row.setPadding(dp(14), dp(12), dp(14), dp(12));
-        row.addView(Ui.iconBox(this, Icons.DOC, Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
+        row.setBackground(Ui.round(this, Ui.CARD_DARK, 16));
+        row.setPadding(dp(11), dp(10), dp(11), dp(10));
+        row.addView(Ui.iconBox(this, Icons.DOC, Ui.ICON_BG, Ui.TEXT, 36), Ui.wrapLp(this, 0, 0, 11, 0));
         LinearLayout mid = Ui.vbox(this);
-        mid.addView(Ui.ellipsized(Ui.text(this, f.getName(), 17, Ui.TEXT, true), 1));
+        mid.addView(Ui.ellipsized(Ui.text(this, f.getName(), 15, Ui.TEXT, true), 1));
         mid.addView(Ui.text(this, new SimpleDateFormat("M/d/yyyy h:mm a", Locale.US).format(new Date(f.lastModified()))
-                + "  ·  " + sizeText(f.length()), 13, Ui.MUTED, false));
+                + "  ·  " + sizeText(f.length()), 12, Ui.MUTED, false));
         row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         row.addView(delButton(v -> confirm("Delete file?", f.getName(), "Delete", () -> { f.delete(); renderFiles(); })), null);
         return row;
     }
 
     private View delButton(View.OnClickListener l) {
-        View v = Ui.icon(this, Icons.TRASH, 20, Ui.RED_TEXT);
-        v.setPadding(dp(10), dp(6), dp(4), dp(6));
+        View v = Ui.icon(this, Icons.TRASH, 18, Ui.RED_TEXT);
+        v.setPadding(dp(9), dp(5), dp(3), dp(5));
         v.setClickable(true);
         v.setOnClickListener(l);
         return v;
@@ -1806,14 +1806,14 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private View dirRow(String title, String sub, boolean active, final Runnable tap, final Runnable delete) {
         LinearLayout row = Ui.hbox(this);
-        row.setBackground(Ui.ripple(active ? Ui.outline(this, Ui.CARD_DARK, Ui.ACCENT, 20) : Ui.round(this, Ui.CARD_DARK, 20)));
-        row.setPadding(dp(14), dp(12), dp(14), dp(12));
+        row.setBackground(Ui.ripple(active ? Ui.outline(this, Ui.CARD_DARK, Ui.ACCENT, 16) : Ui.round(this, Ui.CARD_DARK, 16)));
+        row.setPadding(dp(11), dp(10), dp(11), dp(10));
         row.setClickable(true);
         row.setOnClickListener(v -> tap.run());
-        row.addView(Ui.iconBox(this, Icons.FOLDER, Ui.ICON_BG, Ui.TEXT, 44), Ui.wrapLp(this, 0, 0, 14, 0));
+        row.addView(Ui.iconBox(this, Icons.FOLDER, Ui.ICON_BG, Ui.TEXT, 36), Ui.wrapLp(this, 0, 0, 11, 0));
         LinearLayout mid = Ui.vbox(this);
-        mid.addView(Ui.ellipsized(Ui.text(this, title, 17, Ui.TEXT, true), 1));
-        mid.addView(Ui.ellipsized(Ui.text(this, (active ? "Active  ·  " : "") + sub, 13, Ui.MUTED, false), 1));
+        mid.addView(Ui.ellipsized(Ui.text(this, title, 15, Ui.TEXT, true), 1));
+        mid.addView(Ui.ellipsized(Ui.text(this, (active ? "Active  ·  " : "") + sub, 12, Ui.MUTED, false), 1));
         row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         row.addView(delButton(v -> delete.run()), null);
         return row;
@@ -1927,22 +1927,22 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout box = Ui.vbox(this);
         box.setPadding(dp(16), dp(8), dp(16), dp(8));
         LinearLayout bar = Ui.hbox(this);
-        bar.addView(Ui.text(this, "Console", 22, Ui.ACCENT, true), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView stop = Ui.text(this, "Stop", 14, 0xFFFFFFFF, true);
+        bar.addView(Ui.text(this, "Console", 18, Ui.ACCENT, true), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        TextView stop = Ui.text(this, "Stop", 13, 0xFFFFFFFF, true);
         stop.setBackground(Ui.ripple(Ui.round(this, Ui.RED, 14)));
-        stop.setPadding(dp(16), dp(8), dp(16), dp(8));
+        stop.setPadding(dp(14), dp(7), dp(14), dp(7));
         stop.setClickable(true);
         stop.setOnClickListener(v -> { runner.cancel(); append("\n[stop requested]\n"); });
         bar.addView(stop, Ui.wrapLp(this, 0, 0, 8, 0));
-        TextView copy = Ui.text(this, "Copy", 14, Ui.TEXT, true);
+        TextView copy = Ui.text(this, "Copy", 13, Ui.TEXT, true);
         copy.setBackground(Ui.ripple(Ui.round(this, Ui.CHIP_SEL, 14)));
-        copy.setPadding(dp(16), dp(8), dp(16), dp(8));
+        copy.setPadding(dp(14), dp(7), dp(14), dp(7));
         copy.setClickable(true);
         copy.setOnClickListener(v -> copyLog());
         bar.addView(copy, Ui.wrapLp(this, 0, 0, 8, 0));
-        TextView clear = Ui.text(this, "Clear", 14, Ui.TEXT, true);
+        TextView clear = Ui.text(this, "Clear", 13, Ui.TEXT, true);
         clear.setBackground(Ui.ripple(Ui.round(this, Ui.CHIP_SEL, 14)));
-        clear.setPadding(dp(16), dp(8), dp(16), dp(8));
+        clear.setPadding(dp(14), dp(7), dp(14), dp(7));
         clear.setClickable(true);
         clear.setOnClickListener(v -> { logBuf.setLength(0); logView.setText(""); });
         bar.addView(clear);
@@ -1950,8 +1950,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         logScroll = new ScrollView(this);
         logScroll.setBackground(Ui.panel(this, Ui.CARD_DARK, 22));
-        logView = Ui.mono(this, "", 11.5f, Ui.MUTED);
-        logView.setPadding(dp(12), dp(10), dp(12), dp(10));
+        logView = Ui.mono(this, "", 11, Ui.MUTED);
+        logView.setPadding(dp(10), dp(8), dp(10), dp(8));
         logView.setTextIsSelectable(true);
         logScroll.addView(logView);
         box.addView(logScroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -1964,9 +1964,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         stdinInput.setSingleLine(true);
         stdinInput.setTextSize(14);
         stdinInput.setBackground(Ui.round(this, Ui.CARD_DARK, 16));
-        stdinInput.setPadding(dp(14), dp(12), dp(14), dp(12));
+        stdinInput.setPadding(dp(12), dp(10), dp(12), dp(10));
         in.addView(stdinInput, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView send = Ui.text(this, "Send", 15, Ui.ON_ACCENT, true);
+        TextView send = Ui.text(this, "Send", 13, Ui.ON_ACCENT, true);
         send.setBackground(Ui.ripple(Ui.round(this, Ui.ACCENT, 16)));
         send.setPadding(dp(18), dp(12), dp(18), dp(12));
         send.setClickable(true);
@@ -2042,14 +2042,14 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private void showAbout() {
         LinearLayout box = Ui.vbox(this);
         box.setGravity(Gravity.CENTER_HORIZONTAL);
-        box.setPadding(dp(24), dp(24), dp(24), dp(8));
+        box.setPadding(dp(18), dp(18), dp(18), dp(8));
         ImageView logo = new ImageView(this);
         logo.setImageDrawable(new Logo());
-        box.addView(logo, Ui.lp(this, dp(84), dp(84), 0, 0, 0, 12));
-        TextView name = Ui.text(this, "SPD Tool", 26, Ui.TEXT, true);
+        box.addView(logo, Ui.lp(this, dp(56), dp(56), 0, 0, 0, 10));
+        TextView name = Ui.text(this, "SPD Tool", 20, Ui.TEXT, true);
         name.setGravity(Gravity.CENTER);
         box.addView(name);
-        TextView by = Ui.text(this, "by Xenizth  ·  v" + versionName(), 14, Ui.ACCENT, true);
+        TextView by = Ui.text(this, "by Xenizth  ·  v" + versionName(), 13, Ui.ACCENT, true);
         by.setGravity(Gravity.CENTER);
         box.addView(by, Ui.fullLp(this, 2, 12));
         TextView what = Ui.text(this, "A phone-side front end for TomKing's spd_dump (with libusb) for Unisoc / Spreadtrum devices. "
@@ -2087,8 +2087,8 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
         // Message goes inside a scrollable panel, the confirm field is pinned below it
         // (setMessage+setView together gets the field clipped off-screen on long text).
-        TextView body = Ui.text(this, msg, 15, Ui.TEXT, false);
-        int pad = dp(20);
+        TextView body = Ui.text(this, msg, 14, Ui.TEXT, false);
+        int pad = dp(16);
         FrameLayout sc = new FrameLayout(this);
         sc.addView(body, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         ScrollView scroll = new ScrollView(this);
@@ -2133,7 +2133,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     private LinearLayout dialogBox(View... views) {
         LinearLayout box = Ui.vbox(this);
-        box.setPadding(dp(20), dp(8), dp(20), 0);
+        box.setPadding(dp(16), dp(8), dp(16), 0);
         for (View v : views) box.addView(v, Ui.fullLp(this, 4, 4));
         return box;
     }

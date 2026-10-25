@@ -6,7 +6,7 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 
-/** Flat, Android-style vector icons drawn with primitives on a 24dp grid (no emojis, no images). */
+/** Material Symbols (rounded) style vector icons drawn with primitives on a 24dp grid (no emojis, no images). */
 final class Icons extends Drawable {
     static final int INFO = 0, REFRESH = 1, SETTINGS = 2, PHONE = 3, CHIP = 4, FOLDER = 5,
             TERMINAL = 6, PLUG = 7, WARNING = 8, KEY = 9, SAVE = 10, CHECK = 11, BOLT = 12,
@@ -124,8 +124,8 @@ final class Icons extends Drawable {
                 break;
             }
             case BOLT: {
-                float[] b = {12.8f, 3, 6.5f, 13.5f, 11, 13.5f, 9.5f, 21, 16.5f, 10.5f, 11.8f, 10.5f, 14, 3};
-                strokePath(c, b, stroke);
+                // material flash filled: M7 2 v11 h3 v9 l7-12 h-4 z (outer step), like the Symbols "flash" glyph
+                fillPath(c, new float[]{13.5f, 2, 6.5f, 13.5f, 10, 13.5f, 8.5f, 22, 17.5f, 10, 13, 10, 15.5f, 2, 13.5f, 2}, fill);
                 break;
             }
             case CLIPBOARD: {
@@ -247,16 +247,20 @@ final class Icons extends Drawable {
     }
 
     private static void pins(Canvas c, Paint s) {
-        s.setStrokeWidth(2.2f);
-        c.drawLine(9, 7, 9, 4, s);
-        c.drawLine(12, 7, 12, 4, s);
-        c.drawLine(15, 7, 15, 4, s);
-        c.drawLine(9, 19.9f, 9, 17, s);
-        c.drawLine(12, 19.9f, 12, 17, s);
-        c.drawLine(15, 19.9f, 15, 17, s);
-        c.drawLine(9, 4.2f, 9, 2.3f, s);
-        c.drawLine(12, 4.2f, 12, 2.3f, s);
-        c.drawLine(15, 4.2f, 15, 2.3f, s);
+        s.setStrokeWidth(2f);
+        c.drawLine(9, 5.5f, 9, 6.2f, s);
+        c.drawLine(12, 5.5f, 12, 6.2f, s);
+        c.drawLine(15, 5.5f, 15, 6.2f, s);
+        c.drawLine(9, 17.8f, 9, 18.5f, s);
+        c.drawLine(12, 17.8f, 12, 18.5f, s);
+        c.drawLine(15, 17.8f, 15, 18.5f, s);
+        c.drawLine(5.5f, 9, 6.2f, 9, s);
+        c.drawLine(5.5f, 12, 6.2f, 12, s);
+        c.drawLine(5.5f, 15, 6.2f, 15, s);
+        c.drawLine(17.8f, 9, 18.5f, 9, s);
+        c.drawLine(17.8f, 12, 18.5f, 12, s);
+        c.drawLine(17.8f, 15, 18.5f, 15, s);
+        s.setStrokeWidth(2f);
     }
 
     private static void strokes(Canvas c, Paint s, float... pts) {
@@ -282,6 +286,16 @@ final class Icons extends Drawable {
         path.moveTo(pts[0], pts[1]);
         for (int i = 2; i + 1 < pts.length; i += 2) path.lineTo(pts[i], pts[i + 1]);
         if (pts[0] == pts[pts.length - 2] && pts[1] == pts[pts.length - 1]) path.close();
+        c.drawPath(path, p);
+        c.restore();
+    }
+
+    private static void fillPath(Canvas c, float[] pts, Paint p) {
+        c.save();
+        android.graphics.Path path = new android.graphics.Path();
+        path.moveTo(pts[0], pts[1]);
+        for (int i = 2; i + 1 < pts.length; i += 2) path.lineTo(pts[i], pts[i + 1]);
+        path.close();
         c.drawPath(path, p);
         c.restore();
     }
