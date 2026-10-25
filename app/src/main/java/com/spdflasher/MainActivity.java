@@ -1335,9 +1335,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         new Thread(() -> {
             List<String> actions = new ArrayList<>();
             try {
-                int i = 0, wIdx = 0;
+                int wIdx = 0, idx = 0;
                 for (Pac.Op o : plan.ops) {
-                    i++;
+                    final int i = ++idx;
                     if (o.erase) {
                         log("Erase marked in scheme: " + o.part + "\n");
                         actions.add("e");
