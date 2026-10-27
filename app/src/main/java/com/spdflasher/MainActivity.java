@@ -722,6 +722,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         brandId = chip.brands.length == 1 ? chip.brands[0].toLowerCase(Locale.US) : null;
         savePrefs();
         ensurePreset();
+        autoDetectExec();
         renderAll();
     }
 
@@ -730,6 +731,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         brandId = brand;
         savePrefs();
         ensurePreset();
+        autoDetectExec();
         renderAll();
     }
 
@@ -1455,6 +1457,29 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private static final String FDL2_CBOOT_SHA256 =
             "7e047dc508911f02d6d9f56f0fb3cec1d4067be55e9ffb3bb65e372b9d3ebdf6";
 
+    /** The bundled Infinix UMS9230 download loader (fdl2-dl). */
+    private static final String FDL2_DL_SHA256 =
+            "dd51088b4a43a3d18b52ebf9cbf215eec8a133892f18e38d2e83bc9ed253e819";
+
+    /**
+     * Auto-detect exec_addr from the selected FDL2: the known universal UMS9230 loaders
+     * carry well-documented entry addresses, so matching fingerprint fills the fields.
+     * Saves per chip so a user-typed value always wins again after another edit.
+     */
+    private void autoDetectExec() {
+        if (chipId == null) return;
+        File f2 = fdlFile(2);
+        if (!f2.isFile() || f2.length() == 0) return;
+        try {
+            String sha = fileSha256(f2);
+            if (!FDL2_DL_SHA256.equals(sha) && !FDL2_CBOOT_SHA256.equals(sha)) return;
+            String exec = "0x65015f08", alt = "0x65015f48";
+            if (exec.equals(addr("exec")) && alt.equals(addr("alt"))) return;
+            prefs.edit().putString(chipId + ".exec", exec).putString(chipId + ".alt", alt).apply();
+            log("Auto-detected exec_addr " + exec + " (alt " + alt + ") from FDL2\n");
+        } catch (Exception ignored) { }
+    }
+
     private File unlockWork(String n) { return new File(workDir, n); }
 
     private File unlockDump(String n) { return new File(backupDir, n); }
@@ -2020,6 +2045,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             try {
                 dest.getParentFile().mkdirs();
                 copy(uri, dest, -1);
+                if (n == 2) autoDetectExec();
                 log("Imported FDL" + n + " for " + chipLabel() + " / " + brandLabel() + "\n");
                 main.post(this::renderAll);
             } catch (IOException e) {
