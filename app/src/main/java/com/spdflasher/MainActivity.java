@@ -2,6 +2,7 @@ package com.spdflasher;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -42,9 +43,11 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -119,6 +122,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        installCrashLogger();
         
         workDir = new File(getFilesDir(), "work");
         prefs = getSharedPreferences("spdflasher", MODE_PRIVATE);
@@ -149,6 +153,27 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             prefs.edit().putBoolean("askedStorage", true).apply();
             askStorageAccess();
         }
+    }
+
+    /** Writes any uncaught exception's stack trace to a readable crash.txt so crashes can be diagnosed from a file manager. */
+    private void installCrashLogger() {
+        final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            try {
+                File d = sharedBackupDir();
+                if (!d.isDirectory() && !d.mkdirs()) d = null;
+                if (d == null || !d.canWrite()) {
+                    File ext = getExternalFilesDir(null);
+                    d = ext != null && ext.canWrite() ? ext : getFilesDir();
+                }
+                try (PrintWriter pw = new PrintWriter(new FileWriter(new File(d, "crash.txt"), true))) {
+                    pw.println("\n----- " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date())
+                            + "  thread=" + (t == null ? "?" : t.getName()) + " -----");
+                    pw.println(android.util.Log.getStackTraceString(e));
+                }
+            } catch (Exception ignored) { }
+            if (prev != null) prev.uncaughtException(t, e);
+        });
     }
 
     // ------------------------------------------------------------------ backup folder / storage access
@@ -1975,23 +2000,39 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     private void pickImages() {
-        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType("*/*");
-        i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        startActivityForResult(i, REQ_IMAGES);
+        try {
+            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            i.addCategory(Intent.CATEGORY_OPENABLE);
+            i.setType("*/*");
+            i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            startActivityForResult(i, REQ_IMAGES);
+        } catch (ActivityNotFoundException e) {
+            toast("No file picker on this ROM - copy the files into the Input folder manually");
+        } catch (RuntimeException e) {
+            toast("Could not open the file picker: " + e.getMessage());
+        }
     }
 
     private void pickFdl(int req) {
         if (!hasProfile()) { toast("Pick a chipset and brand in the Device tab first"); return; }
-        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType("*/*");
-        startActivityForResult(i, req);
+        try {
+            Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            i.addCategory(Intent.CATEGORY_OPENABLE);
+            i.setType("*/*");
+            startActivityForResult(i, req);
+        } catch (ActivityNotFoundException e) {
+            toast("No file picker on this ROM - copy the FDL files into the Loaders folder manually");
+        } catch (RuntimeException e) {
+            toast("Could not open the file picker: " + e.getMessage());
+        }
     }
 
     private void exportBackups() {
-        startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_EXPORT);
+        try {
+            startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_EXPORT);
+        } catch (RuntimeException e) {
+            toast("Could not open the folder picker: " + e.getMessage());
+        }
     }
 
     @Override
@@ -2048,7 +2089,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 if (n == 2) autoDetectExec();
                 log("Imported FDL" + n + " for " + chipLabel() + " / " + brandLabel() + "\n");
                 main.post(this::renderAll);
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
                 final String m = "Import failed: " + e.getMessage();
                 main.post(() -> toast(m));
             }
