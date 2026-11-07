@@ -2032,7 +2032,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         mid.addView(Ui.text(this, new SimpleDateFormat("M/d/yyyy h:mm a", Locale.US).format(new Date(f.lastModified()))
                 + "  ·  " + sizeText(f.length()), 12, Ui.MUTED, false));
         row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        row.addView(delButton(v -> confirm("Delete file?", f.getName(), "Delete", () -> { f.delete(); renderFiles(); })), null);
+        // addView(view, null) crashes (ViewGroup.generateLayoutParams(null) -> NPE) - omit the params
+        // argument entirely so addView() generates a default LayoutParams instead.
+        row.addView(delButton(v -> confirm("Delete file?", f.getName(), "Delete", () -> { f.delete(); renderFiles(); })));
         return row;
     }
 
@@ -2055,7 +2057,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         mid.addView(Ui.ellipsized(Ui.text(this, title, 15, Ui.TEXT, true), 1));
         mid.addView(Ui.ellipsized(Ui.text(this, (active ? "Active  ·  " : "") + sub, 12, Ui.MUTED, false), 1));
         row.addView(mid, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        row.addView(delButton(v -> delete.run()), null);
+        row.addView(delButton(v -> delete.run()));
         return row;
     }
 
