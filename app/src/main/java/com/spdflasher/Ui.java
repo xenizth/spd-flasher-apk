@@ -131,11 +131,11 @@ final class Ui {
         return l;
     }
 
-    /** Card container: flat surface on surfaceContainerHigh. */
+    /** Card container: flat surface on surfaceContainerHigh, with a faint top-lit edge for depth (no gradient fill). */
     static LinearLayout card(Context c, int color) {
         LinearLayout l = vbox(c);
-        l.setBackground(round(c, color, 16));
-        int p = dp(c, 12);
+        l.setBackground(outline(c, color, mix(color, 0xFFFFFFFF, 0.07f), 18));
+        int p = dp(c, 14);
         l.setPadding(p, p, p, p);
         return l;
     }
