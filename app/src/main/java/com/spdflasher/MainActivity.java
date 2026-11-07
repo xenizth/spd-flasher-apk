@@ -99,6 +99,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     // views
     private final View[] tabViews = new View[4];
     private final View[] navPills = new View[4];
+    private final View[] navDots = new View[4];
     private final TextView[] navLabels = new TextView[4];
     private LinearLayout deviceBox, opsBox, filesBox;
     private TextView statusLine, logView;
@@ -159,21 +160,54 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private void installCrashLogger() {
         final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            try {
-                File d = sharedBackupDir();
-                if (!d.isDirectory() && !d.mkdirs()) d = null;
-                if (d == null || !d.canWrite()) {
-                    File ext = getExternalFilesDir(null);
-                    d = ext != null && ext.canWrite() ? ext : getFilesDir();
-                }
-                try (PrintWriter pw = new PrintWriter(new FileWriter(new File(d, "crash.txt"), true))) {
-                    pw.println("\n----- " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date())
-                            + "  thread=" + (t == null ? "?" : t.getName()) + " -----");
-                    pw.println(android.util.Log.getStackTraceString(e));
-                }
-            } catch (Exception ignored) { }
+            logCrash(t == null ? "?" : t.getName(), e);
             if (prev != null) prev.uncaughtException(t, e);
         });
+    }
+
+    /** Appends a timestamped stack trace to crash.txt. Never throws. */
+    private void logCrash(String threadName, Throwable e) {
+        try {
+            File d = sharedBackupDir();
+            if (!d.isDirectory() && !d.mkdirs()) d = null;
+            if (d == null || !d.canWrite()) {
+                File ext = getExternalFilesDir(null);
+                d = ext != null && ext.canWrite() ? ext : getFilesDir();
+            }
+            try (PrintWriter pw = new PrintWriter(new FileWriter(new File(d, "crash.txt"), true))) {
+                pw.println("\n----- " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date())
+                        + "  thread=" + threadName + " -----");
+                pw.println(android.util.Log.getStackTraceString(e));
+            }
+        } catch (Exception ignored) { }
+    }
+
+    /**
+     * Runs a tab's render logic with a recovery net: a bug or a device-specific filesystem/permission
+     * quirk inside one screen no longer takes the whole app down. The exception is logged to crash.txt
+     * (same file/format the global handler uses) and that one tab shows a retry card instead.
+     */
+    private void safeRender(LinearLayout box, Runnable body) {
+        try {
+            body.run();
+        } catch (Throwable e) {
+            logCrash("main", e);
+            showRenderError(box, e);
+        }
+    }
+
+    private void showRenderError(LinearLayout box, Throwable e) {
+        if (box == null) return;
+        box.removeAllViews();
+        LinearLayout c = Ui.card(this, Ui.RED_BG);
+        c.addView(Ui.text(this, "This screen hit a problem and couldn't load.", 15, Ui.RED_TEXT, true), Ui.fullLp(this, 0, 8));
+        String msg = e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : "");
+        TextView detail = Ui.mono(this, msg, 12, Ui.RED_TEXT);
+        detail.setLineSpacing(0, 1.2f);
+        c.addView(detail, Ui.fullLp(this, 0, 10));
+        c.addView(Ui.text(this, "Logged to crash.txt in the backup folder. Tap below to retry.", 12, Ui.MUTED, false), Ui.fullLp(this, 0, 10));
+        c.addView(Ui.outlineButton(this, "Try again", v -> renderAll()), Ui.fullLp(this, 4, 0));
+        box.addView(c, Ui.fullLp(this, 0, 8));
     }
 
     // ------------------------------------------------------------------ backup folder / storage access
@@ -346,16 +380,19 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout root = Ui.vbox(this);
         root.setBackgroundColor(Ui.BG);
 
-        // top bar
+        // top bar: icon badge + wordmark/subtitle badge instead of plain text
         LinearLayout bar = new Ui.CappedRow(this);
-        bar.setPadding(dp(10), dp(6), dp(10), dp(4));
+        bar.setPadding(dp(12), dp(8), dp(10), dp(6));
         bar.addView(barButton(Icons.INFO, v -> showAbout()));
+        FrameLayout logoBadge = new FrameLayout(this);
+        logoBadge.setBackground(Ui.round(this, Ui.ICON_BG, 14));
         ImageView logo = new ImageView(this);
         logo.setImageDrawable(new Logo());
-        bar.addView(logo, Ui.lp(this, dp(26), dp(26), 0, 0, 10, 0));
+        logoBadge.addView(logo, new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER));
+        bar.addView(logoBadge, Ui.lp(this, dp(38), dp(38), 0, 0, 10, 0));
         LinearLayout titleBox = Ui.vbox(this);
-        titleBox.addView(Ui.text(this, "SPD Tool", 18, Ui.TEXT, true));
-        titleBox.addView(Ui.text(this, "by Xenizth", 11, Ui.ACCENT, false));
+        titleBox.addView(Ui.text(this, "SPD Tool", 20, Ui.TEXT, true));
+        titleBox.addView(Ui.badge(this, "BY XENIZTH", Ui.ON_ACCENT, Ui.ACCENT), Ui.wrapLp(this, 0, 3, 0, 0));
         bar.addView(titleBox, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         bar.addView(barButton(Icons.REFRESH, v -> onRefresh()));
         bar.addView(barButton(Icons.SETTINGS, v -> showSettings()));
@@ -384,11 +421,12 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         content.addView(console, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // bottom navigation: floating rounded bar, selected tab gets a pill
+        // bottom navigation: floating rounded bar; selected tab gets a crisp outline pill,
+        // a small accent dot above it, and a gentle pop-in scale.
         LinearLayout nav = new Ui.CappedRow(this);
-        nav.setBackground(Ui.panel(this, Ui.CARD, 30));
-        nav.setPadding(dp(6), dp(6), dp(6), dp(6));
-        nav.setElevation(dp(8));
+        nav.setBackground(Ui.panel(this, Ui.CARD, 32));
+        nav.setPadding(dp(8), dp(8), dp(8), dp(8));
+        nav.setElevation(dp(10));
         int[] glyphs = {Icons.PHONE, Icons.CHIP, Icons.FOLDER, Icons.TERMINAL};
         String[] labels = {"Device", "Operations", "Files", "Console"};
         for (int i = 0; i < 4; i++) {
@@ -397,8 +435,13 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             item.setGravity(Gravity.CENTER);
             item.setClickable(true);
             item.setOnClickListener(v -> selectTab(idx));
+            View dot = new View(this);
+            dot.setBackground(Ui.round(this, Ui.ACCENT, 2));
+            dot.setAlpha(0f);
+            navDots[i] = dot;
+            item.addView(dot, Ui.lp(this, dp(16), dp(3), 0, 0, 0, 4));
             View pill = Ui.icon(this, glyphs[i], 20, Ui.TEXT);
-            pill.setLayoutParams(new LinearLayout.LayoutParams(dp(52), dp(30)));
+            pill.setLayoutParams(new LinearLayout.LayoutParams(dp(56), dp(34)));
             navPills[i] = pill;
             item.addView(pill);
             TextView lab = Ui.text(this, labels[i], 11, Ui.MUTED, false);
@@ -442,15 +485,18 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         for (int i = 0; i < 4; i++) {
             tabViews[i].setVisibility(i == tab ? View.VISIBLE : View.GONE);
             boolean sel = i == tab;
-            navPills[i].setBackground(sel ? Ui.panel(this, Ui.CHIP_TOP, 15) : null);
+            navPills[i].setBackground(sel ? Ui.outline(this, Ui.CHIP_TOP, Ui.ACCENT, 17) : null);
             navPills[i].setAlpha(sel ? 1f : 0.6f);
+            if (animOn()) navPills[i].animate().scaleX(sel ? 1.12f : 1f).scaleY(sel ? 1.12f : 1f).setDuration(160).start();
+            else { navPills[i].setScaleX(sel ? 1.12f : 1f); navPills[i].setScaleY(sel ? 1.12f : 1f); }
+            navDots[i].animate().alpha(sel ? 1f : 0f).setDuration(160).start();
             navLabels[i].setTextColor(sel ? Ui.ACCENT : Ui.MUTED);
             navLabels[i].setTypeface(sel ? android.graphics.Typeface.DEFAULT_BOLD : android.graphics.Typeface.DEFAULT);
         }
         animateTiles = animOn();
-        if (tab == TAB_DEVICE) renderDevice();
-        else if (tab == TAB_OPS) renderOps();
-        else if (tab == TAB_FILES) renderFiles();
+        if (tab == TAB_DEVICE) safeRender(deviceBox, this::renderDevice);
+        else if (tab == TAB_OPS) safeRender(opsBox, this::renderOps);
+        else if (tab == TAB_FILES) safeRender(filesBox, this::renderFiles);
         animateTiles = false;
         if (animOn()) {
             View v = tabViews[tab];
@@ -472,9 +518,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     }
 
     private void renderAll() {
-        renderDevice();
-        renderOps();
-        renderFiles();
+        safeRender(deviceBox, this::renderDevice);
+        safeRender(opsBox, this::renderOps);
+        safeRender(filesBox, this::renderFiles);
     }
 
     private void onRefresh() {
@@ -1932,16 +1978,21 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
                 emptyState(Icons.SAVE, "No Loaders Yet", "Select UMS9230 / Infinix for the built-in example, or import your own FDL1 and FDL2 files.");
             }
             for (final String[] p : fdls) {
-                final File dir = profileDir(p[0], p[1]);
-                String[] names = dir.list();
-                if (names != null) Arrays.sort(names);
-                String sub = names == null ? "" : join(Arrays.asList(names));
-                filesBox.addView(dirRow(p[0] + " / " + p[1], sub, p[0].equals(chipId) && p[1].equals(brandId),
-                        () -> selectProfile(p[0], p[1]), () -> confirm("Delete loaders?", "Remove " + p[0] + " / " + p[1] + "?", "Delete", () -> {
-                            deleteRecursive(dir);
-                            if (p[0].equals(chipId) && p[1].equals(brandId)) { brandId = null; savePrefs(); }
-                            renderAll();
-                        })), Ui.fullLp(this, 0, 8));
+                try {
+                    final File dir = profileDir(p[0], p[1]);
+                    String[] names = dir.list();
+                    if (names != null) Arrays.sort(names);
+                    String sub = names == null ? "" : join(Arrays.asList(names));
+                    filesBox.addView(dirRow(p[0] + " / " + p[1], sub, p[0].equals(chipId) && p[1].equals(brandId),
+                            () -> selectProfile(p[0], p[1]), () -> confirm("Delete loaders?", "Remove " + p[0] + " / " + p[1] + "?", "Delete", () -> {
+                                deleteRecursive(dir);
+                                if (p[0].equals(chipId) && p[1].equals(brandId)) { brandId = null; savePrefs(); }
+                                renderAll();
+                            })), Ui.fullLp(this, 0, 8));
+                } catch (Throwable e) {
+                    logCrash("main", e);
+                    // Skip this one profile row rather than losing the whole FDLs tab over it.
+                }
             }
         }
     }
