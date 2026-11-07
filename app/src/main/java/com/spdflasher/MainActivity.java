@@ -496,7 +496,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         animateTiles = animOn();
         if (tab == TAB_DEVICE) safeRender(deviceBox, this::renderDevice);
         else if (tab == TAB_OPS) safeRender(opsBox, this::renderOps);
-        else if (tab == TAB_FILES) safeRender(filesBox, this::renderFiles);
+        else if (tab == TAB_FILES) renderFiles();
         animateTiles = false;
         if (animOn()) {
             View v = tabViews[tab];
@@ -520,7 +520,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     private void renderAll() {
         safeRender(deviceBox, this::renderDevice);
         safeRender(opsBox, this::renderOps);
-        safeRender(filesBox, this::renderFiles);
+        renderFiles();
     }
 
     private void onRefresh() {
@@ -1927,7 +1927,16 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         return arr;
     }
 
+    /**
+     * Entry point every caller should use (chip taps, post-session refresh, delete, tab select, ...).
+     * Self-protecting so a crash while rendering any Files sub-tab can't take the whole app down,
+     * regardless of which code path triggered the render.
+     */
     private void renderFiles() {
+        safeRender(filesBox, this::renderFilesBody);
+    }
+
+    private void renderFilesBody() {
         if (filesBox == null) return;
         filesBox.removeAllViews();
         final File[] in = listFiles(inputDir), bk = listFiles(backupDir);
