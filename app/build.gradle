@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace 'com.spdflasher'
-    compileSdk 34
+    compileSdk 35
     ndkVersion '26.3.11579264'
 
     defaultConfig {
@@ -75,4 +75,9 @@ android {
             }
         }
     }
+}
+
+dependencies {
+    // Material 3 Expressive themes and components (light/dark via Theme.Material3Expressive.DayNight)
+    implementation 'com.google.android.material:material:1.14.0'
 }

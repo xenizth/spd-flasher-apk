@@ -98,9 +98,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
 
     // views
     private final View[] tabViews = new View[4];
-    private final View[] navPills = new View[4];
-    private final View[] navDots = new View[4];
-    private final TextView[] navLabels = new TextView[4];
+    private com.google.android.material.bottomnavigation.BottomNavigationView navBar;
     private LinearLayout deviceBox, opsBox, filesBox;
     private TextView statusLine, logView;
     private android.widget.ProgressBar progress;
@@ -127,9 +125,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         
         workDir = new File(getFilesDir(), "work");
         prefs = getSharedPreferences("spdflasher", MODE_PRIVATE);
-        Ui.applyTheme(prefs.getInt("theme", 0));
-        getWindow().setStatusBarColor(Ui.BG);
-        getWindow().setNavigationBarColor(Ui.BG);
+        applyPalette();
         rootMode = prefs.getBoolean("root", false);
         backupDir = resolveBackupDir();
         fdlRoot = resolveFdlRoot();
@@ -357,7 +353,18 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     @Override
     public void onConfigurationChanged(android.content.res.Configuration cfg) {
         super.onConfigurationChanged(cfg);
+        // uiMode is handled in-place (no recreate), so re-apply the light/dark palette here
+        applyPalette();
         main.post(() -> { renderAll(); });
+    }
+
+    /** Light or dark palette follows the system night mode; accent theme comes from prefs. */
+    private void applyPalette() {
+        boolean dark = (getResources().getConfiguration().uiMode
+                & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        Ui.applyTheme(prefs.getInt("theme", 0), dark);
+        getWindow().setStatusBarColor(Ui.BG);
+        getWindow().setNavigationBarColor(Ui.BG);
     }
 
     @Override
@@ -400,10 +407,14 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         barLp.gravity = Gravity.CENTER_HORIZONTAL;
         root.addView(bar, barLp);
 
-        progress = new android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        progress.setIndeterminate(true);
-        progress.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(Ui.ACCENT));
-        progress.setVisibility(View.GONE);
+        // Material 3 Expressive linear indicator (a ProgressBar subclass, so the field type stays the same)
+        com.google.android.material.progressindicator.LinearProgressIndicator bar =
+                new com.google.android.material.progressindicator.LinearProgressIndicator(this);
+        bar.setIndeterminate(true);
+        bar.setIndicatorColor(Ui.ACCENT);
+        bar.setTrackColor(Ui.alpha(Ui.ACCENT, 0.18f));
+        bar.setVisibility(View.GONE);
+        progress = bar;
         root.addView(progress, Ui.lp(this, ViewGroup.LayoutParams.MATCH_PARENT, dp(3), 16, 0, 16, 4));
 
         statusLine = Ui.text(this, "", 12, Ui.ACCENT, true);
@@ -421,40 +432,24 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         content.addView(console, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // bottom navigation: floating rounded bar; selected tab gets a crisp outline pill,
-        // a small accent dot above it, and a gentle pop-in scale.
-        LinearLayout nav = new Ui.CappedRow(this);
-        nav.setBackground(Ui.panel(this, Ui.CARD, 32));
-        nav.setPadding(dp(8), dp(8), dp(8), dp(8));
-        nav.setElevation(dp(10));
+        // Material 3 Expressive bottom navigation bar (NavigationBarView): tonal active pill,
+        // labelled items, and the same four tabs / selectTab() behaviour as before.
+        com.google.android.material.bottomnavigation.BottomNavigationView nav =
+                new com.google.android.material.bottomnavigation.BottomNavigationView(this);
+        navBar = nav;
         int[] glyphs = {Icons.PHONE, Icons.CHIP, Icons.FOLDER, Icons.TERMINAL};
         String[] labels = {"Device", "Operations", "Files", "Console"};
         for (int i = 0; i < 4; i++) {
-            final int idx = i;
-            LinearLayout item = Ui.vbox(this);
-            item.setGravity(Gravity.CENTER);
-            item.setClickable(true);
-            item.setOnClickListener(v -> selectTab(idx));
-            View dot = new View(this);
-            dot.setBackground(Ui.round(this, Ui.ACCENT, 2));
-            dot.setAlpha(0f);
-            navDots[i] = dot;
-            item.addView(dot, Ui.lp(this, dp(16), dp(3), 0, 0, 0, 4));
-            View pill = Ui.icon(this, glyphs[i], 20, Ui.TEXT);
-            pill.setLayoutParams(new LinearLayout.LayoutParams(dp(56), dp(34)));
-            navPills[i] = pill;
-            item.addView(pill);
-            TextView lab = Ui.text(this, labels[i], 11, Ui.MUTED, false);
-            lab.setGravity(Gravity.CENTER);
-            lab.setSingleLine(true);
-            lab.setPadding(0, dp(3), 0, 0);
-            navLabels[i] = lab;
-            item.addView(lab, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            nav.addView(item, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            nav.getMenu().add(0, i, i, labels[i]).setIcon(new Icons(glyphs[i], Ui.TEXT));
         }
-        LinearLayout.LayoutParams navLp = Ui.lp(this, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 12, 4, 12, 10);
-        navLp.gravity = Gravity.CENTER_HORIZONTAL;
-        root.addView(nav, navLp);
+        nav.setLabelVisibilityMode(com.google.android.material.navigation.NavigationBarView.LABEL_VISIBILITY_LABELED);
+        nav.setBackgroundColor(Ui.CARD);
+        nav.setItemActiveIndicatorColor(android.content.res.ColorStateList.valueOf(Ui.CHIP_TOP));
+        nav.setItemTextColor(new android.content.res.ColorStateList(
+                new int[][]{{android.R.attr.state_checked}, {}},
+                new int[]{Ui.ACCENT, Ui.MUTED}));
+        nav.setOnItemSelectedListener(item -> { selectTab(item.getItemId()); return true; });
+        root.addView(nav, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return root;
     }
 
@@ -484,15 +479,9 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         currentTab = tab;
         for (int i = 0; i < 4; i++) {
             tabViews[i].setVisibility(i == tab ? View.VISIBLE : View.GONE);
-            boolean sel = i == tab;
-            navPills[i].setBackground(sel ? Ui.outline(this, Ui.CHIP_TOP, Ui.ACCENT, 17) : null);
-            navPills[i].setAlpha(sel ? 1f : 0.6f);
-            if (animOn()) navPills[i].animate().scaleX(sel ? 1.12f : 1f).scaleY(sel ? 1.12f : 1f).setDuration(160).start();
-            else { navPills[i].setScaleX(sel ? 1.12f : 1f); navPills[i].setScaleY(sel ? 1.12f : 1f); }
-            navDots[i].animate().alpha(sel ? 1f : 0f).setDuration(160).start();
-            navLabels[i].setTextColor(sel ? Ui.ACCENT : Ui.MUTED);
-            navLabels[i].setTypeface(sel ? android.graphics.Typeface.DEFAULT_BOLD : android.graphics.Typeface.DEFAULT);
         }
+        // setChecked does not fire the listener, so this cannot loop back into selectTab
+        if (navBar != null) navBar.getMenu().getItem(tab).setChecked(true);
         animateTiles = animOn();
         if (tab == TAB_DEVICE) safeRender(deviceBox, this::renderDevice);
         else if (tab == TAB_OPS) safeRender(opsBox, this::renderOps);
@@ -504,7 +493,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             v.setTranslationY(dp(12));
             v.animate().alpha(1f).translationY(0f).setDuration(220).start();
         }
-        haptic(navPills[tab]);
+        if (navBar != null) haptic(navBar);
     }
 
     private boolean animateTiles;

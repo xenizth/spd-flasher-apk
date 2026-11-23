@@ -16,7 +16,7 @@
         android:requestLegacyExternalStorage="true"
         android:extractNativeLibs="true"
         android:label="SPD Tool"
-        android:theme="@android:style/Theme.Material.NoActionBar">
+        android:theme="@style/Theme.SpdTool">
 
         <activity
             android:name=".MainActivity"

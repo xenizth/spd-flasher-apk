@@ -11,6 +11,8 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import com.google.android.material.button.MaterialButton;
+
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -26,28 +28,30 @@ final class Ui {
     // CARD_DARK surfaceContainerLowest (inputs, rows, panels)
     // CHIP_TOP secondaryContainer (selected chips, active pills)
     // CHIP_BOT secondaryContainer low tone (kept for compat; equals CHIP_TOP)
+    // Every colour is now mode-aware: applyTheme(i, dark) fills them for light or dark (system night mode).
     static int BG = 0xFF0B141A;
     static int CARD = 0xFF101E26;
     static int CARD_DARK = 0xFF0C171E;
     static int CHIP_SEL = 0xFF10374B;
-    static final int OUTLINE = 0xFF43566A;
-    static final int TEXT = 0xFFE9F0F7;
-    static final int MUTED = 0xFF9CAFC5;
+    static int OUTLINE = 0xFF43566A;
+    static int TEXT = 0xFFE9F0F7;
+    static int MUTED = 0xFF9CAFC5;
     static int ACCENT = 0xFF64D8F0;
     static int ON_ACCENT = 0xFF00344A;
     static int BLUE_BANNER = 0xFF14283A;
-    static final int RED_BANNER = 0xFF3A101E;
-    static final int RED_TEXT = 0xFFFFB2C1;
-    static final int GREEN = 0xFF7DDBA8;
-    static final int GREEN_BG = 0xFF10362A;
-    static final int RED = 0xFFE6557A;
-    static final int RED_BG = 0xFF3A101E;
-    static final int AMBER = 0xFFF5C563;
-    static final int AMBER_BG = 0xFF382A15;
+    static int RED_BANNER = 0xFF3A101E;
+    static int RED_TEXT = 0xFFFFB2C1;
+    static int GREEN = 0xFF7DDBA8;
+    static int GREEN_BG = 0xFF10362A;
+    static int RED = 0xFFE6557A;
+    static int RED_BG = 0xFF3A101E;
+    static int AMBER = 0xFFF5C563;
+    static int AMBER_BG = 0xFF382A15;
     static int ICON_BG = 0xFF10374B;
 
     // theme-dependent extras (see applyTheme)
     static int ACCENT2 = 0xFF9E8CFF, BG_MID = 0xFF0E1920, HERO = 0xFF122733, CHIP_TOP = 0xFF10374B, CHIP_BOT = 0xFF10374B;
+    static boolean DARK = true;
 
     static final String[] THEME_NAMES = {"Neon", "Synthwave", "Toxic", "Inferno", "Frost"};
     //                          accent      accent2     bgTop       bgMid       hero        chipTop     chipBot     card        cardDark    onAccent
@@ -59,13 +63,33 @@ final class Ui {
             {0xFF9FD2F0, 0xFF8CB8E8, 0xFF0C1218, 0xFF0F161E, 0xFF15293B, 0xFF1C3B52, 0xFF162E42, 0xFF14202B, 0xFF0E1820, 0xFF0D344D},
     };
 
-    /** Switches every theme colour. Call before the views are built (the activity recreates itself on change). */
-    static void applyTheme(int i) {
+    /**
+     * Switches every colour for the accent theme {@code i} and the light/dark mode.
+     * Dark keeps the original palettes; light uses Material 3 style light surfaces with a darker
+     * accent so text and buttons stay readable on white. Call before the views are built.
+     */
+    static void applyTheme(int i, boolean dark) {
+        DARK = dark;
         int[] t = THEMES[Math.max(0, Math.min(THEMES.length - 1, i))];
-        ACCENT = t[0]; ACCENT2 = t[1]; BG = t[2]; BG_MID = t[3]; HERO = t[4]; CHIP_TOP = t[5]; CHIP_BOT = t[6];
-        CARD = t[7]; CARD_DARK = t[8]; ON_ACCENT = t[9];
-        CHIP_SEL = mix(t[5], 0xFFFFFFFF, 0.08f); ICON_BG = t[5];
-        BLUE_BANNER = mix(t[2], t[4], 0.5f);
+        if (dark) {
+            ACCENT = t[0]; ACCENT2 = t[1]; BG = t[2]; BG_MID = t[3]; HERO = t[4]; CHIP_TOP = t[5]; CHIP_BOT = t[6];
+            CARD = t[7]; CARD_DARK = t[8]; ON_ACCENT = t[9];
+            TEXT = 0xFFE9F0F7; MUTED = 0xFF9CAFC5; OUTLINE = 0xFF43566A;
+            RED_BANNER = 0xFF3A101E; RED_TEXT = 0xFFFFB2C1; GREEN = 0xFF7DDBA8; GREEN_BG = 0xFF10362A;
+            RED = 0xFFE6557A; RED_BG = 0xFF3A101E; AMBER = 0xFFF5C563; AMBER_BG = 0xFF382A15;
+            CHIP_SEL = mix(t[5], 0xFFFFFFFF, 0.08f);
+        } else {
+            ACCENT = mix(t[0], 0xFF000000, 0.30f); ACCENT2 = mix(t[1], 0xFF000000, 0.25f);
+            BG = 0xFFF7FAFC; BG_MID = 0xFFEEF3F7; HERO = 0xFFE3EDF6;
+            CHIP_TOP = mix(0xFFFFFFFF, t[0], 0.28f); CHIP_BOT = CHIP_TOP;
+            CARD = 0xFFFFFFFF; CARD_DARK = 0xFFEAF0F5; ON_ACCENT = 0xFFFFFFFF;
+            TEXT = 0xFF14202A; MUTED = 0xFF53657A; OUTLINE = 0xFFBFCBD8;
+            RED_BANNER = 0xFFFCE4E9; RED_TEXT = 0xFFB3261E; GREEN = 0xFF1B6B43; GREEN_BG = 0xFFDDF3E6;
+            RED = 0xFFB3263F; RED_BG = 0xFFFCE4E9; AMBER = 0xFF8A5A00; AMBER_BG = 0xFFFFF1D6;
+            CHIP_SEL = mix(CHIP_TOP, 0xFF000000, 0.06f);
+        }
+        ICON_BG = CHIP_TOP;
+        BLUE_BANNER = mix(BG, HERO, 0.5f);
     }
 
     static int dp(Context c, float v) {
@@ -134,7 +158,7 @@ final class Ui {
     /** Card container: flat surface on surfaceContainerHigh, with a faint top-lit edge for depth (no gradient fill). */
     static LinearLayout card(Context c, int color) {
         LinearLayout l = vbox(c);
-        l.setBackground(outline(c, color, mix(color, 0xFFFFFFFF, 0.07f), 18));
+        l.setBackground(outline(c, color, DARK ? mix(color, 0xFFFFFFFF, 0.07f) : mix(color, 0xFF000000, 0.05f), 28));
         int p = dp(c, 14);
         l.setPadding(p, p, p, p);
         return l;
@@ -165,8 +189,8 @@ final class Ui {
         TextView t = text(c, label, 13, selected ? TEXT : MUTED, selected);
         t.setSingleLine(true);
         t.setGravity(Gravity.CENTER);
-        if (selected) t.setBackground(ripple(round(c, CHIP_TOP, 18)));
-        else t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 18)));
+        if (selected) t.setBackground(ripple(round(c, CHIP_TOP, 22)));
+        else t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 22)));
         t.setPadding(dp(c, 13), dp(c, 8), dp(c, 13), dp(c, 8));
         t.setClickable(true);
         t.setOnClickListener(l);
@@ -176,9 +200,9 @@ final class Ui {
     /** Chip with an optional leading vector icon (used by the file tabs). */
     static LinearLayout chip(Context c, String label, int icon, boolean selected, View.OnClickListener l) {
         LinearLayout w = hbox(c);
-        w.setBackground(selected ? ripple(round(c, CHIP_TOP, 18))
-                : ripple(outline(c, Color.TRANSPARENT, OUTLINE, 18)));
-        w.setPadding(dp(c, 12), dp(c, 8), dp(c, 12), dp(c, 8));
+        w.setBackground(selected ? ripple(round(c, CHIP_TOP, 22))
+                : ripple(outline(c, Color.TRANSPARENT, OUTLINE, 22)));
+        w.setPadding(dp(c, 14), dp(c, 10), dp(c, 14), dp(c, 10));
         w.setClickable(true);
         w.setOnClickListener(l);
         if (icon != 0) w.addView(icon(c, icon, 14, selected ? TEXT : MUTED), wrapLp(c, 0, 0, 6, 0));
@@ -201,24 +225,44 @@ final class Ui {
         ((LinearLayout) row.getChildAt(0)).addView(chip, wrapLp(row.getContext(), 0, 0, 8, 0));
     }
 
+    /** Material 3 Expressive filled button: full pill, tonal accent, bold label. */
     static TextView primaryButton(Context c, String label, View.OnClickListener l) {
-        TextView t = text(c, label, 14, ON_ACCENT, true);
-        t.setGravity(Gravity.CENTER);
-        t.setBackground(ripple(round(c, ACCENT, 30)));
-        t.setPadding(dp(c, 20), dp(c, 11), dp(c, 20), dp(c, 11));
-        t.setClickable(true);
-        t.setOnClickListener(l);
-        return t;
+        MaterialButton b = new MaterialButton(c);
+        b.setText(label);
+        b.setAllCaps(false);
+        b.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
+        b.setTypeface(Typeface.DEFAULT_BOLD);
+        b.setTextColor(ON_ACCENT);
+        b.setBackgroundTintList(ColorStateList.valueOf(ACCENT));
+        b.setRippleColor(ColorStateList.valueOf(alpha(ON_ACCENT, 0.12f)));
+        b.setCornerRadius(dp(c, 100));
+        b.setInsetTop(0);
+        b.setInsetBottom(0);
+        b.setMinHeight(dp(c, 48));
+        b.setPadding(dp(c, 24), dp(c, 12), dp(c, 24), dp(c, 12));
+        b.setOnClickListener(l);
+        return b;
     }
 
+    /** Material 3 Expressive outlined button: full pill with a 1dp outline. */
     static TextView outlineButton(Context c, String label, View.OnClickListener l) {
-        TextView t = text(c, label, 14, TEXT, true);
-        t.setGravity(Gravity.CENTER);
-        t.setBackground(ripple(outline(c, Color.TRANSPARENT, OUTLINE, 30)));
-        t.setPadding(dp(c, 20), dp(c, 11), dp(c, 20), dp(c, 11));
-        t.setClickable(true);
-        t.setOnClickListener(l);
-        return t;
+        MaterialButton b = new MaterialButton(c);
+        b.setText(label);
+        b.setAllCaps(false);
+        b.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
+        b.setTypeface(Typeface.DEFAULT_BOLD);
+        b.setTextColor(TEXT);
+        b.setBackgroundTintList(ColorStateList.valueOf(Color.TRANSPARENT));
+        b.setStrokeColor(ColorStateList.valueOf(OUTLINE));
+        b.setStrokeWidth(dp(c, 1));
+        b.setRippleColor(ColorStateList.valueOf(alpha(TEXT, 0.10f)));
+        b.setCornerRadius(dp(c, 100));
+        b.setInsetTop(0);
+        b.setInsetBottom(0);
+        b.setMinHeight(dp(c, 48));
+        b.setPadding(dp(c, 24), dp(c, 12), dp(c, 24), dp(c, 12));
+        b.setOnClickListener(l);
+        return b;
     }
 
     /** Colored strip with a leading vector icon. */
