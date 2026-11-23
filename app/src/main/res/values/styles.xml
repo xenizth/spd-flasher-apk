@@ -3,8 +3,9 @@
     <!-- App theme: Material 3 Expressive, follows the system light/dark setting. -->
     <style name="Theme.SpdTool" parent="Theme.Material3Expressive.DayNight.NoActionBar"/>
 
-    <!-- Dialogs: Material 3 Expressive alert colours and shapes (light/dark automatic). -->
-    <style name="SpdDialog" parent="ThemeOverlay.Material3Expressive.Dialog.Alert">
+    <!-- Dialogs: framework alert theme (the Material 3 overlay crashed the framework AlertDialog).
+         values-night/ holds the dark variant. -->
+    <style name="SpdDialog" parent="@android:style/Theme.Material.Light.Dialog.Alert">
         <item name="android:windowMinWidthMajor">80%</item>
         <item name="android:windowMinWidthMinor">90%</item>
     </style>
