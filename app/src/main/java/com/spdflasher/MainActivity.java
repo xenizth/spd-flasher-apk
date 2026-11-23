@@ -122,6 +122,17 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         installCrashLogger();
+        try {
+            startUi();
+        } catch (Throwable t) {
+            // Startup failed: log it and show the error on screen instead of closing the app.
+            logCrash("onCreate", t);
+            showStartupError(t);
+        }
+    }
+
+    /** Builds the whole UI. Any exception here is caught by onCreate and shown on screen. */
+    private void startUi() {
         
         workDir = new File(getFilesDir(), "work");
         prefs = getSharedPreferences("spdflasher", MODE_PRIVATE);
@@ -150,6 +161,23 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
             prefs.edit().putBoolean("askedStorage", true).apply();
             askStorageAccess();
         }
+    }
+
+    /** Plain, theme-independent screen with the startup stack trace, so the error can be read and copied. */
+    private void showStartupError(Throwable t) {
+        try {
+            TextView tv = new TextView(this);
+            tv.setTextColor(0xFF000000);
+            tv.setBackgroundColor(0xFFFFFFFF);
+            tv.setTextSize(12);
+            tv.setPadding(40, 40, 40, 40);
+            tv.setTextIsSelectable(true);
+            tv.setText("SPD Tool failed to start.\n\n" + android.util.Log.getStackTraceString(t)
+                    + "\n\nThe same text is saved to crash.txt in the backup folder.");
+            ScrollView sv = new ScrollView(this);
+            sv.addView(tv);
+            setContentView(sv);
+        } catch (Throwable ignored) { }
     }
 
     /** Writes any uncaught exception's stack trace to a readable crash.txt so crashes can be diagnosed from a file manager. */
@@ -524,7 +552,7 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         UsbManager um = (UsbManager) getSystemService(Context.USB_SERVICE);
         if (um == null) return out;
         for (UsbDevice d : um.getDeviceList().values()) {
-            if (d.getVendorId() == SpdRunner.SPRD_VENDOR_ID) out.add(d);
+            if (SpdRunner.isDownloadMode(d)) out.add(d);
         }
         return out;
     }

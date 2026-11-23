@@ -43,6 +43,12 @@ final class SpdRunner {
     }
 
     static final int SPRD_VENDOR_ID = 0x1782;
+    /** Unisoc/Spreadtrum download-mode product ID. Only 1782:4d00 is treated as a flashable device. */
+    static final int SPRD_DOWNLOAD_PID = 0x4d00;
+
+    static boolean isDownloadMode(UsbDevice d) {
+        return d != null && d.getVendorId() == SPRD_VENDOR_ID && d.getProductId() == SPRD_DOWNLOAD_PID;
+    }
     private static final String ACTION_PERMISSION = "com.spdflasher.USB_PERMISSION";
     private static final int RECONNECT_WAIT_SECONDS = 90;
     private static final int PERMISSION_WAIT_SECONDS = 30;
@@ -153,7 +159,7 @@ final class SpdRunner {
     private int runInternal(File workDir, List<String> args, int waitSeconds)
             throws InterruptedException {
         ui.status("Waiting for device...");
-        ui.log("Waiting up to " + waitSeconds + " s for a Unisoc device (USB 1782:xxxx).\n"
+        ui.log("Waiting up to " + waitSeconds + " s for a Unisoc device (USB 1782:4d00).\n"
                 + "Plug the phone in now, in download mode.\n");
         UsbDevice device = null;
         long deadline = System.currentTimeMillis() + waitSeconds * 1000L;
@@ -374,7 +380,7 @@ final class SpdRunner {
         String oldName = old != null ? old.getDeviceName() : null;
         while (childAlive && !cancelled && System.currentTimeMillis() < deadline) {
             for (UsbDevice d : usb.getDeviceList().values()) {
-                if (d.getVendorId() != SPRD_VENDOR_ID) continue;
+                if (!isDownloadMode(d)) continue;
                 if (oldName == null || !oldName.equals(d.getDeviceName())) return d;
                 // Same node still listed: the old descriptor is probably just stale.
                 if (System.currentTimeMillis() - start > SAME_NODE_REOPEN_MS) return d;
@@ -395,7 +401,7 @@ final class SpdRunner {
 
     private UsbDevice findDevice() {
         for (UsbDevice d : usb.getDeviceList().values()) {
-            if (d.getVendorId() == SPRD_VENDOR_ID) return d;
+            if (isDownloadMode(d)) return d;
         }
         return null;
     }

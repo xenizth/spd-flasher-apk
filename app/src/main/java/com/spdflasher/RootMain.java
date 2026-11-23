@@ -123,7 +123,8 @@ public final class RootMain {
         if (devs == null) return null;
         for (File d : devs) {
             String vid = readLine(new File(d, "idVendor"));
-            if (!SPRD_VENDOR.equalsIgnoreCase(vid)) continue;
+            String pid = readLine(new File(d, "idProduct"));
+            if (!SPRD_VENDOR.equalsIgnoreCase(vid) || !"4d00".equalsIgnoreCase(pid)) continue;
             try {
                 int bus = Integer.parseInt(readLine(new File(d, "busnum")));
                 int dev = Integer.parseInt(readLine(new File(d, "devnum")));
