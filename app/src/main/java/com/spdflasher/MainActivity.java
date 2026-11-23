@@ -408,13 +408,13 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         root.addView(bar, barLp);
 
         // Material 3 Expressive linear indicator (a ProgressBar subclass, so the field type stays the same)
-        com.google.android.material.progressindicator.LinearProgressIndicator bar =
+        com.google.android.material.progressindicator.LinearProgressIndicator indicator =
                 new com.google.android.material.progressindicator.LinearProgressIndicator(this);
-        bar.setIndeterminate(true);
-        bar.setIndicatorColor(Ui.ACCENT);
-        bar.setTrackColor(Ui.alpha(Ui.ACCENT, 0.18f));
-        bar.setVisibility(View.GONE);
-        progress = bar;
+        indicator.setIndeterminate(true);
+        indicator.setIndicatorColor(Ui.ACCENT);
+        indicator.setTrackColor(Ui.alpha(Ui.ACCENT, 0.18f));
+        indicator.setVisibility(View.GONE);
+        progress = indicator;
         root.addView(progress, Ui.lp(this, ViewGroup.LayoutParams.MATCH_PARENT, dp(3), 16, 0, 16, 4));
 
         statusLine = Ui.text(this, "", 12, Ui.ACCENT, true);
