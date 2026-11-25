@@ -8,11 +8,11 @@ android {
     ndkVersion '26.3.11579264'
 
     defaultConfig {
-        applicationId 'com.spdflasher'
+        applicationId 'com.kryvexx.spdtool'
         minSdk 24
-        targetSdk 34
+        targetSdk 37
         versionCode 12
-        versionName "2.1"
+        versionName "4.1"
 
         // 32-bit and 64-bit ARM phones (the source repo cares a lot about arm32)
         ndk {
