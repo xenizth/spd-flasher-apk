@@ -615,9 +615,29 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         // connection mode card
         LinearLayout cm = Ui.card(this, Ui.CARD);
         cm.addView(cardHeader(Icons.KEY, "Connection Mode"));
-        HorizontalScrollView modes = Ui.chipRow(this);
-        Ui.addChip(modes, Ui.chip(this, "No Root (Android USB)", !rootMode, v -> setRootMode(false)));
-        Ui.addChip(modes, Ui.chip(this, "Root (su)", rootMode, v -> setRootMode(true)));
+        // Material 3 segmented buttons: exactly one mode is always selected
+        com.google.android.material.button.MaterialButtonToggleGroup modes =
+                new com.google.android.material.button.MaterialButtonToggleGroup(this);
+        modes.setSingleSelection(true);
+        modes.setSelectionRequired(true);
+        int idNoRoot = View.generateViewId();
+        int idRoot = View.generateViewId();
+        com.google.android.material.button.MaterialButton bNoRoot =
+                new com.google.android.material.button.MaterialButton(this);
+        bNoRoot.setId(idNoRoot);
+        bNoRoot.setText("No Root (Android USB)");
+        bNoRoot.setAllCaps(false);
+        com.google.android.material.button.MaterialButton bRoot =
+                new com.google.android.material.button.MaterialButton(this);
+        bRoot.setId(idRoot);
+        bRoot.setText("Root (su)");
+        bRoot.setAllCaps(false);
+        modes.addView(bNoRoot);
+        modes.addView(bRoot);
+        modes.check(rootMode ? idRoot : idNoRoot);
+        modes.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) setRootMode(checkedId == idRoot);
+        });
         cm.addView(modes, Ui.fullLp(this, 10, 0));
         TextView mt = Ui.text(this, rootMode
                 ? "Root: the app asks su to open the USB device directly. No Android USB permission pop-ups, and the phone can come back on a new "

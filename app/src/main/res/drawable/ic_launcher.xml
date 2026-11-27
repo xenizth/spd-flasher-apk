@@ -1,21 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Full app icon for API 24/25 (no adaptive icon support): rounded square + phone/bolt mark.
-     Same 108 grid as the adaptive foreground, bg drawn as a rounded square. -->
+<!-- App launcher icon (option B): bright cyan rounded square, dark phone with a cut-out bolt on the screen.
+     108 viewport grid, drawn from the 1024px logo SVG (scale 108/1024). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="48dp"
     android:height="48dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <path>
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="0"
+                android:endX="108" android:endY="108"
+                android:startColor="#FF7FE6FA"
+                android:endColor="#FF3AAFD0"/>
+        </aapt:attr>
+        <!-- rounded square background -->
+        <path android:pathData="M0,24.25 Q0,0 24.25,0 H83.75 Q108,0 108,24.25 V83.75 Q108,108 83.75,108 H24.25 Q0,108 0,83.75 Z"/>
+    </path>
+    <!-- phone body -->
     <path
         android:fillColor="#FF0B141A"
-        android:pathData="M0,20.25 Q0,0 20.25,0 H87.75 Q108,0 108,20.25 V87.75 Q108,108 87.75,108 H20.25 Q0,108 0,87.75 Z"/>
+        android:pathData="M34,25.5 Q34,17.9 41.6,17.9 H66.4 Q74.1,17.9 74.1,25.5 V82.4 Q74.1,90 66.4,90 H41.6 Q34,90 34,82.4 Z"/>
+    <!-- screen -->
     <path
-        android:strokeColor="#FF64D8F0"
-        android:strokeWidth="4.5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M47,88 H61 M34,26 Q34,13 47,13 H61 Q74,13 74,26 V82 Q74,95 61,95 H47 Q34,95 34,82 Z"/>
+        android:fillColor="#FF3AAFD0"
+        android:pathData="M38.8,28 Q38.8,24.9 42,24.9 H66 Q69.2,24.9 69.2,28 V75.9 Q69.2,78.9 66,78.9 H42 Q38.8,78.9 38.8,75.9 Z"/>
+    <!-- bolt cut-out on the screen -->
     <path
-        android:fillColor="#FF64D8F0"
-        android:pathData="M61,25 L43,58 L51.5,58 L48,83 L68,48 L58,48 Z"/>
+        android:fillColor="#FF0B141A"
+        android:pathData="M58.25,36.18 L47.31,56.13 L52.48,56.13 L50.35,71.32 L62.5,50.27 L60.98,50.27 Z"/>
+    <!-- plug tab -->
+    <path
+        android:fillColor="#FF0B141A"
+        android:pathData="M51.7,83.3 H57.4 Q58.5,83.3 58.5,84.4 V86.4 Q58.5,87.6 57.4,87.6 H51.7 Q50.4,87.6 50.4,86.4 V84.4 Q50.4,83.3 51.7,83.3 Z"/>
 </vector>
