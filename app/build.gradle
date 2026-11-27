@@ -12,7 +12,7 @@ android {
         minSdk 24
         targetSdk 37
         versionCode 12
-        versionName "2.1"
+        versionName "4.1"
 
         // 32-bit and 64-bit ARM phones (the source repo cares a lot about arm32)
         ndk {
