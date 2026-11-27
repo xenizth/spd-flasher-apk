@@ -8,9 +8,9 @@ android {
     ndkVersion '26.3.11579264'
 
     defaultConfig {
-        applicationId 'com.kryvexx.spdflasher'
+        applicationId 'com.kryvexx.spdtool'
         minSdk 24
-        targetSdk 34
+        targetSdk 37
         versionCode 12
         versionName "2.1"
 

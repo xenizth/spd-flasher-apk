@@ -670,10 +670,21 @@ public class MainActivity extends Activity implements SpdRunner.Listener {
         LinearLayout h3 = Ui.hbox(this);
         h3.addView(cardHeader(Icons.PHONE, "Device Hardware Profile"),
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView auto = Ui.text(this, "Auto-Detect", 13, Ui.TEXT, true);
-        auto.setBackground(Ui.ripple(Ui.round(this, Ui.CHIP_SEL, 14)));
-        auto.setPadding(dp(12), dp(7), dp(12), dp(7));
-        auto.setClickable(true);
+        // Material 3 tonal button for auto-detect
+        com.google.android.material.button.MaterialButton auto =
+                new com.google.android.material.button.MaterialButton(this);
+        auto.setText("Auto-Detect");
+        auto.setAllCaps(false);
+        auto.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
+        auto.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        auto.setTextColor(Ui.TEXT);
+        auto.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Ui.CHIP_SEL));
+        auto.setRippleColor(android.content.res.ColorStateList.valueOf(Ui.alpha(Ui.TEXT, 0.10f)));
+        auto.setCornerRadius(dp(100));
+        auto.setInsetTop(0);
+        auto.setInsetBottom(0);
+        auto.setMinHeight(dp(36));
+        auto.setPadding(dp(14), dp(6), dp(14), dp(6));
         auto.setOnClickListener(v -> autoDetect());
         h3.addView(auto);
         c3.addView(h3);
